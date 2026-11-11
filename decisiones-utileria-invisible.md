@@ -323,17 +323,30 @@ Código en `invisible-utileria/telefono/` (ver su README). Web app estática, of
 - La miniatura del adjunto en el mail es oscura, para no adelantar lo que muestra el video.
 - Todo el estado se guarda, así que al cerrar y abrir la tapa la Mac queda igual.
 
-## 15. ESC 3: Eco toma la Mac (pendiente de elegir dirección)
+## 15. ESC 3: Eco toma la Mac
 
 - `[DECIDIDO]` La página de Eco tiene que referenciar algo "hacker": comandos de terminal que corren e interactúan solos. Además, se abre una miniatura de la webcam grabando en vivo.
-- Tres direcciones en el canvas: 1 · Consola dentro de Eco, 2 · Terminales que se abren solas, 3 · Pantalla tomada.
-- Las 4 líneas literales del guion aparecen en las tres.
-- `[INVENTADO]` Los comandos (`conectar`, `enviar`, `cruzar --historial ubicacion`, `camara --abrir --en-vivo`…) y los datos del historial de ubicación (horarios casa/fiesta/casa).
-- Técnica: la webcam en vivo funciona en Safari de la Mac (la página está en https). Hay que dar permiso a la cámara para el sitio una vez, y se prende la luz verde de la cámara.
+- `[DECIDIDO]` **Dirección 2 · Terminales que se abren solas.** La página de Eco, en una ventana privada del navegador, va mostrando las 4 líneas literales del guion. Con cada línea se abre sola una terminal que tipea comandos.
+- Construido (v1):
+  - Secuencia:
+    - "Enviando a Martina": abre la terminal "conectar".
+    - "Cruzando historial de ubicación…": abre la terminal "ubicacion".
+    - "No sos horrible.": abre la terminal "perfil".
+    - "No sos invisible.": abre la ventana "cam0 — en vivo" con REC.
+  - La primera línea aparece con el toque del equipo. Las demás aparecen solas cada 5 s (configurable), o una por toque.
+  - `[PROPUESTA]` Cursor falso que se mueve solo hacia cada ventana nueva, con el cursor real oculto. Se puede apagar.
+  - `[PROPUESTA]` En la ESC 3 la pantalla solo muestra lo de Eco: las ventanas de la ESC 1 quedan cerradas.
+  - Cámara: webcam real por defecto, o video de respaldo cargado desde el menú.
+- `[INVENTADO]`, todo editable en el JSON:
+  - Los comandos y sus respuestas.
+  - El historial de ubicación (31/10 21:58 casa, 23:12 fiesta, 01/11 01:40 casa).
+  - Los títulos de las ventanas: "eco — conectar", "eco — ubicacion", "eco — perfil", "cam0 — en vivo".
+  - La línea "coincidencia: "Me odio."", que retoma el audio de Martina de la ESC 1.
+- Técnica: la webcam en vivo funciona en Safari de la Mac (https). Hay que dar permiso a la cámara para el sitio. El menú tiene un botón para pedirlo antes de la toma. Se prende la luz verde de la cámara.
 - Preguntas abiertas:
-  - Al final de la ESC 1 Martina tapa la cámara con cinta. ¿En la ESC 3 la imagen en vivo tiene que verse tapada, o mostrar el cuarto? Si tiene que mostrar el cuarto, se puede usar un video pregrabado (ya hay un lugar en el menú para cargarlo).
-  - ¿La ventana de la cámara se abre sola con temporizador o con toque invisible del equipo?
+  - Al final de la ESC 1 Martina tapa la cámara con cinta. ¿En la ESC 3 la imagen tiene que verse tapada, o mostrar el cuarto? Si tiene que mostrar el cuarto, se usa el video de respaldo.
+  - ¿Te sirve que la ventana de la cámara se abra con la última línea, o la querés en otro momento?
 
 ## 16. Próximo paso
 
-Elegir la dirección de la ESC 3 y responder lo de la cámara. Probar en el iPhone el teclado simulado y en la MacBook la app de la Mac.
+Probar en el iPhone el teclado simulado. En la MacBook, probar la app de la Mac y la ESC 3 con la webcam real. Responder lo de la cinta en la cámara.

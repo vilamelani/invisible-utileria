@@ -1,6 +1,7 @@
 // INVISIBLE — utilería de la MacBook (dirección A · Claro fiel)
 import { M, cargarMedios } from './media.js';
 import { initMenu, abrirMenu, refrescarMenu, menuAbierto } from './menu.js';
+import { initEsc3, pintarEsc3, esc3Base, esc3Siguiente, esc3Texto } from './esc3.js';
 
 const LS_ESTADO = 'invisible-mac-estado-v1';
 const LS_AJUSTES = 'invisible-mac-ajustes-v1';
@@ -16,7 +17,12 @@ export const A = {
   avisoFijo: true,     // el aviso del mail queda hasta que se toca (si no, se va solo)
   avisoSeg: 6,
   cargaVideo: 8,       // seg. que tarda en cargar el video
-  videoLoop: false
+  videoLoop: false,
+  esc3Auto: true,      // ESC 3: los pasos avanzan solos
+  esc3Paso: 5,         // seg. entre línea y línea
+  esc3Arranque: 0,     // seg. para que arranque sola al cargar el plano (0 = con el toque)
+  camFuente: 'webcam', // 'webcam' (la cámara real de la Mac) | 'video' (video de respaldo cargado en el menú)
+  cursorFalso: true    // cursor que se mueve solo (y se oculta el real)
 };
 export let C = null; // contenido (textos)
 
@@ -27,6 +33,7 @@ function estadoBase() {
     musica: { sonando: true, base: C ? C.musica.posInicial : 0, t0: Date.now() },
     mail: { llego: false, hora: '', leido: false, sel: false },
     aviso: false,
+    esc3: null,
     win: {
       musica: { open: true, ...W0.musica, z: 2 },
       correo: { open: false, ...W0.correo, z: 1 },
@@ -101,8 +108,11 @@ const MENUS = {
   archivos: ['Archivos', 'Archivo', 'Edición', 'Ver', 'Ir', 'Ventana', 'Ayuda'],
   musica: ['Música', 'Archivo', 'Edición', 'Canción', 'Ver', 'Controles', 'Ventana', 'Ayuda'],
   correo: ['Correo', 'Archivo', 'Edición', 'Ver', 'Buzón', 'Mensaje', 'Formato', 'Ventana', 'Ayuda'],
-  video: ['Video', 'Archivo', 'Edición', 'Ver', 'Ventana', 'Ayuda']
+  video: ['Video', 'Archivo', 'Edición', 'Ver', 'Ventana', 'Ayuda'],
+  navegador: ['Navegador', 'Archivo', 'Edición', 'Ver', 'Historial', 'Marcadores', 'Ventana', 'Ayuda'],
+  terminal: ['Terminal', 'Shell', 'Edición', 'Ver', 'Ventana', 'Ayuda']
 };
+let frenteEsc3 = 'navegador';
 
 // ---------- Escenario (1440 × 900, se escala para llenar la pantalla) ----------
 const stage = document.getElementById('stage');
@@ -222,7 +232,7 @@ function alFrente(id) {
 
 // ---------- Barra de menú, Dock y aviso ----------
 function pintarMenuBar() {
-  const app = frente() || 'archivos';
+  const app = S.esc3 ? frenteEsc3 : (frente() || 'archivos');
   const items = MENUS[app] || MENUS.archivos;
   $('[data-menus]').innerHTML = items.map((t, i) => `<span class="${i === 0 ? 'app' : ''}">${esc(t)}</span>`).join('');
   $('[data-bat]').innerHTML = (A.bateriaPct ? `<span class="pct">${Math.round(A.bateria)} %</span>` : '') + ICO.bateria(A.bateria);
@@ -371,6 +381,7 @@ function cerrarVentana(id) {
 
 // Siguiente evento del guion de la Mac.
 export function siguiente() {
+  if (S.esc3) { esc3Siguiente(); refrescarMenu(); return; }
   if (S.musica.sonando) return pausarMusica(true);
   if (!S.mail.llego) return llegarMail();
   if (!S.win.correo.open || !S.mail.sel) return abrirCorreo(true);
@@ -378,6 +389,7 @@ export function siguiente() {
   if ((Date.now() - S.win.video.t0) / 1000 < A.cargaVideo) { S.win.video.t0 = Date.now() - A.cargaVideo * 1000 - 50; save(); tick(); }
 }
 export function estadoTexto() {
+  if (S.esc3) return esc3Texto();
   if (S.musica.sonando) return 'Música sonando. Siguiente: pausar la música.';
   if (!S.mail.llego) return 'Música pausada. Siguiente: llega el mail de Julián.';
   if (!S.win.correo.open || !S.mail.sel) return 'Mail recibido (aviso en pantalla). Siguiente: abrir el mail.';
@@ -392,7 +404,8 @@ export const PLANOS = [
   { id: '1.B', t: '1.B · Martina apaga la música' },
   { id: '1.G/2', t: '1.G/2 · Llega el mail (música pausada)' },
   { id: '1.G/2-abierto', t: '1.G/2 · Mail de Julián abierto' },
-  { id: '1.G/4', t: '1.G/4 · Video reproduciéndose' }
+  { id: '1.G/4', t: '1.G/4 · Video reproduciéndose' },
+  { id: 'ESC 3', t: 'ESC 3 · Eco toma la Mac' }
 ];
 let mailAutoT = 0;
 export function cargarPlano(id) {
@@ -411,6 +424,12 @@ export function cargarPlano(id) {
     base.win.video.z = 4;
     base.win.video.t0 = Date.now() - A.cargaVideo * 1000 - 50;
   }
+  if (id === 'ESC 3') {
+    // [PROPUESTA] En la ESC 3 la pantalla solo muestra lo de Eco: las ventanas de la ESC 1 quedan cerradas.
+    base.musica.sonando = false;
+    Object.values(base.win).forEach((w) => { w.open = false; });
+    base.esc3 = esc3Base();
+  }
   S = base;
   save();
   pintarTodo();
@@ -428,6 +447,7 @@ export function pintarTodo() {
   pintarFondo();
   pintarVentanas();
   pintarAviso();
+  pintarEsc3();
 }
 
 // ---------- Interacción (clics reales en la Mac) ----------
@@ -510,13 +530,16 @@ async function boot() {
   try { Object.assign(A, JSON.parse(localStorage.getItem(LS_AJUSTES) || '{}')); } catch (e) { /* */ }
   const editado = localStorage.getItem(LS_CONTENIDO);
   if (editado) { try { C = JSON.parse(editado); } catch (e) { C = null; } }
-  if (!C) C = await (await fetch('contenido/mac.json')).json();
+  const original = await (await fetch('contenido/mac.json')).json();
+  if (!C) C = original;
+  Object.keys(original).forEach((k) => { if (C[k] === undefined) C[k] = original[k]; }); // textos nuevos que no estaban en una versión editada
   try { const s = JSON.parse(localStorage.getItem(LS_ESTADO) || 'null'); if (s && s.win) S = s; } catch (e) { /* */ }
   if (!S) S = estadoBase();
   await cargarMedios();
   escalar();
   window.addEventListener('resize', escalar);
   armar();
+  initEsc3({ getS: () => S, getA: () => A, getC: () => C, save, stage, alCambiar: (f) => { frenteEsc3 = f; pintarMenuBar(); refrescarMenu(); } });
   pintarTodo();
   initClics();
   initToques();

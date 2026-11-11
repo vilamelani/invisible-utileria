@@ -6,9 +6,8 @@ Web app estática (sin backend, funciona sin conexión) que simula el escritorio
 - reproductor de música "sonando" (no suena: el sonido va en post),
 - aviso de mail nuevo,
 - Correo con el mail de Julián y el video adjunto,
-- reproductor de video que tarda en cargar.
-
-La ESC 3 (Eco toma la Mac) queda para cuando se elija la dirección.
+- reproductor de video que tarda en cargar,
+- ESC 3: Eco toma la Mac. La página de Eco, en una ventana privada del navegador, muestra las 4 líneas del guion. Con cada línea se abre sola una terminal que escribe comandos, y con la última se abre la cámara en vivo.
 
 ## Estructura
 
@@ -19,6 +18,7 @@ mac/
   js/mac.js              escritorio, ventanas y secuencia de la escena
   js/menu.js             menú oculto del equipo técnico
   js/media.js            fotos y videos guardados en la Mac
+  js/esc3.js             ESC 3: Eco, terminales y cámara en vivo
   contenido/mac.json     TODOS los textos (canción, mail, bandeja de entrada, fechas)
   sw.js                  modo sin conexión
 ```
@@ -64,6 +64,24 @@ Secuencia de "Siguiente evento":
 4. Abre el video.
 5. Hace que el video termine de cargar ya.
 
+En la ESC 3, "Siguiente evento" hace aparecer la próxima línea de Eco.
+
+### ESC 3
+
+1. En el menú: **Cargar ESC 3**. Queda Eco cargando, sin líneas.
+2. La primera línea aparece con el toque invisible (doble clic sobre la hora o Ctrl+Opción+→). También puede arrancar sola a los X segundos.
+3. Las demás líneas aparecen solas cada 5 s (configurable), o una por toque si se apaga el temporizador.
+4. Cada línea abre su terminal y la última abre la ventana **cam0 — en vivo**.
+5. Un cursor falso se mueve solo hacia cada ventana nueva y el cursor real se oculta. Se puede apagar.
+
+**Cámara:** por defecto usa la **webcam real** de la Mac. La primera vez Safari pide permiso:
+- Usá **Pedir permiso de cámara ahora** del menú antes de la toma, así el cartel no aparece en cámara.
+- Para que no lo pida nunca más: Safari › Ajustes › Sitios web › Cámara › Permitir.
+
+Si la cámara está tapada con cinta, o se prefiere una imagen controlada, se puede cargar un **video de respaldo** en Fotos y videos y elegir "Cámara: video de respaldo".
+
+Los comandos, las terminales, las posiciones de las ventanas y el recorrido del cursor están en `contenido/mac.json` (sección `esc3`).
+
 ### Lo que hace la actriz con el trackpad
 
 - **Pausar la música**: botón de pausa del reproductor.
@@ -86,3 +104,5 @@ Secuencia de "Siguiente evento":
 - Si Safari mantiene la pantalla completa después de cerrar y abrir la tapa.
 - Que el video cargado (de la webcam) se reproduzca bien en Safari. Si es un `.mov` HEVC, debería; si falla, convertirlo a `.mp4` H.264.
 - El tamaño real de los textos en la pantalla de 13".
+- La webcam real en Safari: el cartel de permiso, si al recargar vuelve a pedirlo, y la imagen en la ventanita. Se probó con una cámara simulada en Chrome.
+- Si la luz verde de la cámara queda encendida al salir de la ESC 3 (debería apagarse al cargar otro plano).

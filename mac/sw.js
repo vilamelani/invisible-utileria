@@ -1,9 +1,9 @@
 // Service worker: deja la app de la Mac disponible sin conexión.
 // Subí VERSION cada vez que publiques cambios.
-const VERSION = 'invisible-mac-v1';
+const VERSION = 'invisible-mac-v2';
 const ARCHIVOS = [
   './', './index.html', './manifest.webmanifest', './css/mac.css',
-  './js/mac.js', './js/menu.js', './js/media.js', './contenido/mac.json',
+  './js/mac.js', './js/menu.js', './js/media.js', './js/esc3.js', './contenido/mac.json',
   './iconos/icono-180.png', './iconos/icono-192.png', './iconos/icono-512.png'
 ];
 self.addEventListener('install', (e) => {

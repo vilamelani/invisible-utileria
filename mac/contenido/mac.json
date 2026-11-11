@@ -17,8 +17,171 @@
     "peso": "24,6 MB"
   },
   "bandeja": [
-    { "de": "Bristagram", "asunto": "Tenés notificaciones nuevas", "resumen": "cami.rossi y 4 personas más indicaron que les gusta tu publicación.", "cuando": "ayer" },
-    { "de": "Campus del cole", "asunto": "Nueva entrega publicada", "resumen": "Historia · Trabajo práctico 4 · vence el lunes", "cuando": "jueves" },
-    { "de": "Mamá", "asunto": "Fotos del cumple de la abuela", "resumen": "Te mando las que sacó tu tía. Hay una que te va a encantar.", "cuando": "martes" }
-  ]
+    {
+      "de": "Bristagram",
+      "asunto": "Tenés notificaciones nuevas",
+      "resumen": "cami.rossi y 4 personas más indicaron que les gusta tu publicación.",
+      "cuando": "ayer"
+    },
+    {
+      "de": "Campus del cole",
+      "asunto": "Nueva entrega publicada",
+      "resumen": "Historia · Trabajo práctico 4 · vence el lunes",
+      "cuando": "jueves"
+    },
+    {
+      "de": "Mamá",
+      "asunto": "Fotos del cumple de la abuela",
+      "resumen": "Te mando las que sacó tu tía. Hay una que te va a encantar.",
+      "cuando": "martes"
+    }
+  ],
+  "esc3": {
+    "url": "eco.chat",
+    "pasos": [
+      {
+        "linea": "Enviando a Martina",
+        "abre": "t1"
+      },
+      {
+        "linea": "Cruzando historial de ubicación…",
+        "abre": "t2"
+      },
+      {
+        "linea": "No sos horrible.",
+        "abre": "t3"
+      },
+      {
+        "linea": "No sos invisible.",
+        "abre": "cam"
+      }
+    ],
+    "terminales": {
+      "t1": {
+        "titulo": "eco — conectar",
+        "lineas": [
+          {
+            "cmd": "conectar --equipo \"MacBook de Martina\""
+          },
+          {
+            "out": "buscando equipo… encontrado",
+            "c": "dim"
+          },
+          {
+            "out": "sesión abierta",
+            "c": "ok"
+          },
+          {
+            "cmd": "enviar --a martina --por talkgram"
+          },
+          {
+            "out": "mensaje en cola (1/1)",
+            "c": "dim"
+          },
+          {
+            "out": "entregado",
+            "c": "ok"
+          }
+        ]
+      },
+      "t2": {
+        "titulo": "eco — ubicacion",
+        "lineas": [
+          {
+            "cmd": "cruzar --historial ubicacion --desde 31/10"
+          },
+          {
+            "out": "31/10 21:58  casa",
+            "c": "dim"
+          },
+          {
+            "out": "31/10 23:12  fiesta",
+            "c": "dim"
+          },
+          {
+            "out": "01/11 01:40  casa",
+            "c": "dim"
+          },
+          {
+            "out": "coincidencias: 3",
+            "c": "ok"
+          }
+        ]
+      },
+      "t3": {
+        "titulo": "eco — perfil",
+        "lineas": [
+          {
+            "cmd": "leer --conversaciones martina"
+          },
+          {
+            "out": "Eco: 4 audios · TalkGram: 41 mensajes",
+            "c": "dim"
+          },
+          {
+            "out": "coincidencia: \"Me odio.\"",
+            "c": "dim"
+          },
+          {
+            "cmd": "responder --perfil martina"
+          },
+          {
+            "out": "generando respuesta…",
+            "c": "dim"
+          }
+        ]
+      }
+    },
+    "camTitulo": "cam0 — en vivo",
+    "ventanas": {
+      "navegador": {
+        "x": 70,
+        "y": 60,
+        "w": 1000,
+        "h": 680
+      },
+      "t1": {
+        "x": 820,
+        "y": 104,
+        "w": 520
+      },
+      "t2": {
+        "x": 880,
+        "y": 300,
+        "w": 480
+      },
+      "t3": {
+        "x": 120,
+        "y": 540,
+        "w": 500
+      },
+      "cam": {
+        "x": 960,
+        "y": 500,
+        "w": 420
+      }
+    },
+    "cursor": [
+      [
+        720,
+        450
+      ],
+      [
+        1060,
+        150
+      ],
+      [
+        1080,
+        350
+      ],
+      [
+        420,
+        610
+      ],
+      [
+        1150,
+        640
+      ]
+    ]
+  }
 }

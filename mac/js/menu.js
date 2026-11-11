@@ -6,6 +6,7 @@ import {
   pintarMenuBar, pintarFondo, pintarVentanas, pintarTodo
 } from './mac.js';
 import { M, MEDIOS, guardarMedio, borrarMedio, esVideo } from './media.js';
+import { pedirCamara, pararCamara, pintarEsc3 } from './esc3.js';
 
 const layer = () => document.getElementById('menu-layer');
 const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -75,7 +76,21 @@ function html() {
     <section>
       <h3>Plano (deja la Mac exactamente como empieza ese plano)</h3>
       <div class="row">${PLANOS.map((p) => `<button class="btn ${S.plano === p.id ? 'on' : ''}" data-plano="${p.id}">${esc(p.t)}</button>`).join('')}</div>
-      <p class="note">ESC 3 (Eco toma la Mac): pendiente de elegir dirección.</p>
+    </section>
+    <section>
+      <h3>ESC 3 · Eco toma la Mac</h3>
+      <div class="row">${b('esc3-cargar', 'Cargar ESC 3 (Eco cargando)', 'go')}${b('siguiente', 'Siguiente línea')}</div>
+      <div class="row"><label><input type="checkbox" data-chk="esc3Auto" ${A.esc3Auto ? 'checked' : ''}> Después de la primera línea, las demás aparecen solas</label>
+        <label>cada (s) <input type="number" min="1" step="0.5" data-num="esc3Paso" value="${A.esc3Paso}"></label></div>
+      <div class="row"><label>Arranca sola a los (s) de cargar la ESC 3 <input type="number" min="0" step="0.5" data-num="esc3Arranque" value="${A.esc3Arranque}"></label></div>
+      <p class="note">0 = la primera línea aparece con el toque invisible (doble clic sobre la hora o Ctrl+Opción+→). Con cada línea se abre una terminal; con la última, la cámara en vivo.</p>
+      <div class="row">
+        <button class="btn ${A.camFuente !== 'video' ? 'on' : ''}" data-cam="webcam">Cámara: webcam real</button>
+        <button class="btn ${A.camFuente === 'video' ? 'on' : ''}" data-cam="video">Cámara: video de respaldo</button>
+        ${b('cam-permiso', 'Pedir permiso de cámara ahora')}
+      </div>
+      <p class="note">Pedí el permiso antes de la toma, así el cartel de Safari no aparece en cámara. Para que no lo pida nunca más: Safari › Ajustes › Sitios web › Cámara › Permitir. El video de respaldo se carga en Fotos y videos.</p>
+      <div class="row"><label><input type="checkbox" data-chk="cursorFalso" ${A.cursorFalso ? 'checked' : ''}> Cursor que se mueve solo (oculta el cursor real)</label></div>
     </section>
     <section>
       <h3>Música</h3>
@@ -140,8 +155,9 @@ function aplicarNumero(inp) {
 }
 
 async function onClick(ev) {
-  const t = ev.target.closest('[data-act],[data-plano],[data-del]');
+  const t = ev.target.closest('[data-act],[data-plano],[data-del],[data-cam]');
   if (!t) return;
+  if (t.dataset.cam) { A.camFuente = t.dataset.cam; saveAjustes(); pararCamara(); pintarEsc3(); pintar(); toast('Listo: ' + t.textContent.trim()); return; }
   if (t.dataset.plano) { cargarPlano(t.dataset.plano); pintar(); toast('Plano cargado: ' + t.dataset.plano); return; }
   if (t.dataset.del) { await borrarMedio(t.dataset.del); pintarTodo(); pintar(); toast('Borrado'); return; }
   switch (t.dataset.act) {
@@ -155,6 +171,12 @@ async function onClick(ev) {
     case 'mail': llegarMail(); toast('Mail recibido'); break;
     case 'mail-abrir': abrirCorreo(true); toast('Mail abierto'); break;
     case 'video': abrirVideo(false); toast('Video abierto'); break;
+    case 'esc3-cargar': cargarPlano('ESC 3'); pintar(); toast('ESC 3 cargada'); break;
+    case 'cam-permiso': {
+      const st = await pedirCamara();
+      toast(st ? 'Cámara habilitada' : 'No se pudo acceder a la cámara', st ? 'ok' : 'err');
+      break;
+    }
     case 'hora-fijar': {
       const v = layer().querySelector('[data-hora]').value;
       if (v) { A.horaFija = v; A.horaFijaDesde = Date.now(); saveAjustes(); pintarMenuBar(); pintar(); toast('Hora fijada: ' + v); }
@@ -182,7 +204,7 @@ async function onClick(ev) {
 
 async function onChange(ev) {
   const t = ev.target;
-  if (t.dataset.chk) { A[t.dataset.chk] = t.checked; saveAjustes(); pintarMenuBar(); toast(t.checked ? 'Activado' : 'Desactivado'); return; }
+  if (t.dataset.chk) { A[t.dataset.chk] = t.checked; saveAjustes(); pintarMenuBar(); if (t.dataset.chk === 'cursorFalso') pintarEsc3(); toast(t.checked ? 'Activado' : 'Desactivado'); return; }
   if (t.dataset.txt) { setRuta(C, t.dataset.txt, t.value); setContenido(C); pintarVentanas(); pintarMenuBar(); toast('Guardado'); return; }
   if (t.dataset.cnum) { setRuta(C, t.dataset.cnum, parseFloat(t.value) || 0); setContenido(C); pintarVentanas(); toast('Guardado'); return; }
   if (t.dataset.num) { aplicarNumero(t); toast('Guardado'); return; }
