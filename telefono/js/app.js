@@ -1036,7 +1036,9 @@ function initToques() {
     const top = topSeguro();
     const enFranja = e.clientY < top + Z;
     if (enFranja && e.clientX < Z) {
-      lp = setTimeout(() => { suprimir = true; abrirMenu(); }, 700);
+      // Al abrir el menú con la pulsación larga se descarta el "click" que llega al soltar.
+      // iOS a veces no genera ese click: por eso el descarte vence solo, para no comerse el primer toque del menú.
+      lp = setTimeout(() => { suprimir = true; abrirMenu(); setTimeout(() => { suprimir = false; }, 450); }, 700);
     }
     if (enFranja && e.clientX > window.innerWidth - Z && !TR.story) {
       const t = Date.now();
@@ -1091,6 +1093,8 @@ function detectarBarra() {
 const esApp = () => navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 async function boot() {
   load();
+  // Sin esto, iOS no muestra el estado :active (respuesta visual) al tocar botones.
+  document.addEventListener('touchstart', () => {}, { passive: true });
   document.documentElement.style.setProperty('--extra-top', (A.extraTop || 0) + 'px');
   const editado = localStorage.getItem(LS_GUION);
   if (editado) {

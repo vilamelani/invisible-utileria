@@ -12,6 +12,7 @@ const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 export function initMenu() {
   layer().addEventListener('click', onClick);
   layer().addEventListener('change', onChange);
+  layer().addEventListener('input', (e) => { if (e.target.dataset.num) aplicarNumero(e.target, false); });
 }
 export function abrirMenu() {
   pintar();
@@ -24,7 +25,47 @@ export function refrescarMenu() {
   if (st) { const e = estadoTexto(); st.innerHTML = `Chat: ${esc(e.tg)}<br>Eco: ${esc(e.eco)}`; }
 }
 
+// Aviso breve dentro del menú (confirma que la acción se hizo).
+let toastT = 0;
+function toast(msg, tipo = 'ok') {
+  let el = layer().querySelector('.menu-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.className = 'menu-toast';
+    layer().appendChild(el);
+  }
+  el.textContent = (tipo === 'ok' ? '✓ ' : '') + msg;
+  el.classList.toggle('err', tipo === 'err');
+  el.classList.remove('in');
+  void el.offsetWidth;
+  el.classList.add('in');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('in'), 1800);
+}
+// Repinta el menú sin perder la posición del scroll.
 function pintar() {
+  const prev = layer().querySelector('.menu');
+  const y = prev ? prev.scrollTop : 0;
+  pintarMenu();
+  const nuevo = layer().querySelector('.menu');
+  if (nuevo) nuevo.scrollTop = y;
+}
+// Acciones que piden confirmación: el primer toque cambia el texto del botón, el segundo confirma.
+function confirmar(btn, texto) {
+  if (btn.dataset.armado === '1') return true;
+  btn.dataset.armado = '1';
+  btn.dataset.orig = btn.textContent;
+  btn.textContent = texto;
+  btn.classList.add('armado');
+  setTimeout(() => {
+    if (!btn.isConnected) return;
+    btn.dataset.armado = '';
+    btn.textContent = btn.dataset.orig;
+    btn.classList.remove('armado');
+  }, 3000);
+  return false;
+}
+function pintarMenu() {
   const G = getG();
   const e = estadoTexto();
   const b = (act, lbl, cls = '') => `<button class="btn ${cls}" data-act="${act}">${lbl}</button>`;
@@ -136,43 +177,44 @@ async function onClick(ev) {
     return;
   }
   if (t.dataset.go) { cerrar(); go(t.dataset.go); return; }
-  if (t.dataset.set) { A[t.dataset.set] = t.dataset.val; saveAjustes(); pintar(); return; }
-  if (t.dataset.del) { await borrarMedio(t.dataset.del); if (t.dataset.del === 'fondo') await calcularColorFondo(); pintar(); return; }
+  if (t.dataset.set) { A[t.dataset.set] = t.dataset.val; saveAjustes(); pintar(); toast('Listo: ' + t.textContent.trim()); return; }
+  if (t.dataset.del) { await borrarMedio(t.dataset.del); if (t.dataset.del === 'fondo') await calcularColorFondo(); pintar(); toast('Foto borrada'); return; }
   const G = getG();
   switch (t.dataset.act) {
     case 'cerrar': cerrar(); if (S.screen !== 'bristagram') render(); break;
     case 'cargar-plano': cargarPlano(+layer().querySelector('[data-plano]').value); cerrar(); break;
     case 'siguiente': cerrar(); siguiente(); break;
-    case 'deshacer': deshacer(); break;
-    case 'reiniciar': if (confirm('¿Reiniciar chat, Eco y notificaciones?')) { reiniciarTodo(); cerrar(); } break;
-    case 'agendar': S.tg.agendado = true; S.tg.nombre = G.contacto.nombreAgendado; save(); pintar(); break;
-    case 'desagendar': S.tg.agendado = false; S.tg.nombre = ''; save(); pintar(); break;
-    case 'borrar-notifs': S.lockNotifs = []; save(); break;
+    case 'deshacer': deshacer(); toast('Último mensaje deshecho'); break;
+    case 'reiniciar': if (confirmar(t, 'Tocá otra vez para reiniciar')) { reiniciarTodo(); cerrar(); } break;
+    case 'agendar': S.tg.agendado = true; S.tg.nombre = G.contacto.nombreAgendado; save(); pintar(); toast('Contacto agendado'); break;
+    case 'desagendar': S.tg.agendado = false; S.tg.nombre = ''; save(); pintar(); toast('Contacto quitado'); break;
+    case 'borrar-notifs': S.lockNotifs = []; save(); toast('Notificaciones borradas'); break;
     case 'eco-sig': cerrar(); if (S.screen !== 'eco') go('eco'); ecoSiguiente(); break;
-    case 'eco-reset': reiniciarEco(); break;
+    case 'eco-reset': reiniciarEco(); toast('Eco reiniciado'); break;
     case 'llamar': cerrar(); iniciarLlamada(true); break;
     case 'hora-fijar': {
       const v = layer().querySelector('[data-hora]').value;
-      if (v) { A.horaFija = v; A.horaFijaDesde = Date.now(); saveAjustes(); pintar(); }
+      if (v) { A.horaFija = v; A.horaFijaDesde = Date.now(); saveAjustes(); pintar(); toast('Hora fijada: ' + v); }
       break;
     }
-    case 'hora-real': A.horaFija = ''; saveAjustes(); pintar(); break;
+    case 'hora-real': A.horaFija = ''; saveAjustes(); pintar(); toast('Usando hora real'); break;
     case 'json-guardar': {
       try {
         const obj = JSON.parse(layer().querySelector('[data-json]').value);
         setGuion(obj, true);
-        alert('Textos guardados.');
+        toast('Textos guardados');
       } catch (e) {
-        alert('El JSON tiene un error: ' + e.message);
+        toast('El JSON tiene un error: ' + e.message, 'err');
       }
       break;
     }
     case 'json-original': {
-      if (!confirm('¿Descartar los textos editados y volver al guion original?')) break;
+      if (!confirmar(t, 'Tocá otra vez para descartar')) break;
       borrarGuionEditado();
       const obj = await (await fetch('contenido/guion.json', { cache: 'reload' })).json();
       setGuion(obj, false);
       pintar();
+      toast('Guion original restaurado');
       break;
     }
     default: break;
@@ -184,13 +226,21 @@ async function onChange(ev) {
   const t = ev.target;
   if (t.dataset.file) {
     const f = t.files && t.files[0];
-    if (f) { await guardarMedio(t.dataset.file, f); if (t.dataset.file === 'fondo') await calcularColorFondo(); pintar(); }
+    if (f) { await guardarMedio(t.dataset.file, f); if (t.dataset.file === 'fondo') await calcularColorFondo(); pintar(); toast('Foto cargada'); }
     return;
   }
-  if (t.dataset.chk) { A[t.dataset.chk] = t.checked; saveAjustes(); return; }
-  if (t.dataset.num) {
-    const v = parseFloat(t.value);
-    if (!Number.isNaN(v)) { A[t.dataset.num] = v; saveAjustes(); }
-    if (t.dataset.num === 'extraTop') document.documentElement.style.setProperty('--extra-top', (A.extraTop || 0) + 'px');
-  }
+  if (t.dataset.chk) { A[t.dataset.chk] = t.checked; saveAjustes(); toast(t.checked ? 'Activado' : 'Desactivado'); return; }
+  if (t.dataset.num) aplicarNumero(t, true);
+}
+// Los números se aplican mientras se escriben (sin esperar a salir del campo).
+let numT = 0;
+function aplicarNumero(t, avisar) {
+  const v = parseFloat(t.value);
+  if (Number.isNaN(v)) return;
+  A[t.dataset.num] = v;
+  saveAjustes();
+  if (t.dataset.num === 'extraTop') document.documentElement.style.setProperty('--extra-top', (A.extraTop || 0) + 'px');
+  clearTimeout(numT);
+  if (avisar) toast('Guardado');
+  else numT = setTimeout(() => toast('Guardado'), 700);
 }

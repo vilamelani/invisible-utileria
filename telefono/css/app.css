@@ -390,3 +390,25 @@ img, video { display: block; }
   background: linear-gradient(180deg, var(--fondo-top, #5571AA) 0%, transparent 100%); }
 .call .top-fade { height: max(0px, calc(160px - env(safe-area-inset-top, 0px) * 1000));
   background: linear-gradient(180deg, #1D1B22 0%, rgba(29, 27, 34, 0.6) 40%, rgba(29, 27, 34, 0) 100%); }
+
+/* ---------- Respuesta al tocar ---------- */
+/* Botones de las apps: se atenúan al apretar, como en iOS. */
+button { transition: opacity 0.12s ease-out, transform 0.12s ease-out, filter 0.12s ease-out; }
+button:active { opacity: 0.4; transition-duration: 0s; }
+.home-app:active, .dock button:active { opacity: 1; filter: brightness(0.7); }
+.notif:active { opacity: 1; transform: scale(0.98); }
+.call-btn:active { opacity: 1; filter: brightness(0.8); }
+.bg-st:active { opacity: 1; transform: scale(0.95); }
+.sv button:active, .pv button:active { opacity: 0.5; }
+
+/* Menú oculto: respuesta clara en cada botón */
+.menu .btn { transition: transform 0.1s ease-out, background-color 0.15s, filter 0.1s; -webkit-user-select: none; user-select: none; }
+.menu .btn:active { opacity: 1; transform: scale(0.95); filter: brightness(1.45); transition-duration: 0s; }
+.menu .btn.armado { background: #FF453A; color: #fff; }
+.menu label { min-height: 40px; }
+.menu input[type=checkbox] { width: 22px; height: 22px; accent-color: #0A84FF; }
+.menu-toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); transform: translate(-50%, 20px); z-index: 120;
+  width: max-content; max-width: calc(100% - 32px); padding: 11px 18px; border-radius: 14px; background: #30D158; color: #04210E; font-size: 15px; font-weight: 600;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35); opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+.menu-toast.in { opacity: 1; transform: translate(-50%, 0); }
+.menu-toast.err { background: #FF453A; color: #fff; }

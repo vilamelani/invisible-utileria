@@ -281,6 +281,14 @@ Código en `invisible-utileria/telefono/` (ver su README). Web app estática, of
   - Para aplicarlo hay que borrar el ícono y volver a agregarlo, porque iOS guarda el modo al instalar.
 - `[PROPUESTA]` Con conexión, la app siempre baja la última versión. Sin conexión (modo avión) usa la guardada.
 
+- Respuesta al tocar (v2.1):
+  - Todos los botones se atenúan al apretarlos, como en iOS. En el menú oculto se achican e iluminan.
+  - Cada acción del menú muestra un aviso verde breve ("Listo", "Guardado", "Foto cargada"…).
+  - Los números se guardan mientras se escriben.
+  - Reiniciar y descartar textos piden un segundo toque, en lugar de los cuadros de diálogo de iOS.
+  - El menú ya no salta arriba al tocar una opción.
+  - Arreglado: el primer toque después de abrir el menú se perdía (había que tocar dos veces).
+
 ## 12. Próximo paso
 
 Probar la app en el iPhone 14 (lista de lo no verificable en el README). Después, direcciones visuales de la Mac.
