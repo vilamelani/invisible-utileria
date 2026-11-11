@@ -289,6 +289,32 @@ Código en `invisible-utileria/telefono/` (ver su README). Web app estática, of
   - El menú ya no salta arriba al tocar una opción.
   - Arreglado: el primer toque después de abrir el menú se perdía (había que tocar dos veces).
 
-## 12. Próximo paso
+- `[DECIDIDO]` Teléfono aprobado por Dirección (2026-11-10), salvo el teclado.
 
-Probar la app en el iPhone 14 (lista de lo no verificable en el README). Después, direcciones visuales de la Mac.
+## 12. Teclado del iPhone (pendiente)
+
+- La barra ↑ ↓ ✓ arriba del teclado la agrega iOS a cualquier campo de texto de una web. No se puede quitar desde la app, ni se puede forzar la barra predictiva.
+- `[PROPUESTA]` Teclado simulado tipo iOS dibujado en la app, con barra predictiva falsa y sin teclado del sistema. Interruptor en el menú: "Teclado: simulado / del sistema".
+- Se arregla igual el hueco entre la barra de escribir y el teclado.
+
+## 13. Mac: direcciones visuales (pendiente de elegir)
+
+Canvas "Invisible — direcciones MacBook", a 1440 × 900:
+
+- **A · Claro fiel:** macOS claro, el más parecido a una Mac recién configurada. Es el que más ilumina la cara de Martina.
+- **B · Noche:** macOS oscuro, fondo azul noche. Ilumina menos y se integra con la lámpara de lava. Además empalma con ESC 3, que es oscuro.
+- **C · Su Mac:** escritorio personalizado (foto con amigas de fondo, archivos en el escritorio, playlist propia, acento rosa). Cuenta más del personaje.
+- **ESC 3:** igual para las tres. Navegador en ventana privada con la página de Eco (misma marca que en el celular), las 4 líneas literales y un cursor falso.
+- `[PROPUESTA]` En la barra de menú, un círculo propio reemplaza al logo de Apple. Los nombres de las apps son genéricos: Correo, Música, Navegador.
+- `[INVENTADO]`, a confirmar:
+  - Canción "Cuarto creciente", de Las Lunas de Abril.
+  - En C, la playlist "para llorar" y sus otros temas.
+  - Mail de Julián: asunto "Para vos", cuerpo "Lo tenía guardado. Mirá :)", adjunto "para_vos.mov" (24,6 MB).
+  - Otros mails de relleno: Bristagram, Campus del cole, Mamá.
+  - Hora 2:14 en 1.G y 2:31 en ESC 3.
+  - Dominio "eco.chat".
+- Para revisar: en el guion, "Enviando a Martina" va sin puntos suspensivos y "Cruzando historial de ubicación…" va con ellos. Se deja literal.
+
+## 14. Próximo paso
+
+Elegir la dirección de la Mac y decidir el teclado. Después, construir la app de la Mac.
