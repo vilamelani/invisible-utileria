@@ -6,7 +6,7 @@ import { initMenu, abrirMenu, refrescarMenu } from './menu.js';
 const LS_ESTADO = 'invisible-estado-v1';
 const LS_AJUSTES = 'invisible-ajustes-v1';
 const LS_GUION = 'invisible-guion-v2';
-export const LS_BARRA = 'invisible-barra';
+export const LS_BARRA = 'invisible-barra-v2'; // v2: vuelve a 'default' para todos
 
 // ---------- Estado ----------
 export let G = null; // guion
@@ -88,27 +88,57 @@ let CUR = null;
 let cleanup = null;
 const $ = (s) => (CUR ? CUR.querySelector(s) : null);
 const $$ = (s) => (CUR ? [...CUR.querySelectorAll(s)] : []);
-// En modo oscuro, iOS pinta la barra de estado con su propio gris (#1C1C1E) e ignora el color de la app.
-// Por eso las pantallas oscuras funden su borde superior en ese gris (ver .top-fade).
-const GRIS_IOS = '#1C1C1E';
+// Barra de estado (modo 'default'): iOS la pinta con el color de fondo de la página y elige solo
+// el color del texto (blanco sobre fondos oscuros, negro sobre claros). Cada pantalla pone de fondo
+// el color de su borde superior. No se toca color-scheme: en modo oscuro iOS pinta un gris propio.
+let colorFondo = '#5571AA';     // borde superior del fondo de pantalla (se mide sobre la foto cargada)
+const COLOR_LLAMADA = '#1D1B22';
 const THEME = {
-  bloqueo: [GRIS_IOS, true], inicio: [GRIS_IOS, true], bristagram: ['#FFFFFF', false],
-  talkgram: ['#F7F8F9', false], eco: ['#FFFFFF', false], llamada: [GRIS_IOS, true]
+  bloqueo: () => colorFondo, inicio: () => colorFondo, bristagram: () => '#FFFFFF',
+  talkgram: () => '#F7F8F9', eco: () => '#FFFFFF', llamada: () => COLOR_LLAMADA
 };
 function setTheme(color, oscuro) {
   document.querySelector('meta[name=theme-color]').setAttribute('content', color);
   document.documentElement.style.background = color;
   document.body.style.background = color;
-  document.documentElement.style.colorScheme = oscuro ? 'dark' : 'light';
   if ((localStorage.getItem(LS_BARRA) || 'default') === 'auto') {
     const m = document.querySelector('meta[name=apple-mobile-web-app-status-bar-style]');
     if (m) m.setAttribute('content', oscuro ? 'black-translucent' : 'default');
   }
 }
 function themeActual() {
-  if (S.screen === 'bristagram' && TR.story) return setTheme(GRIS_IOS, true);
-  const t = THEME[S.screen] || ['#000000', true];
-  setTheme(t[0], t[1]);
+  if (S.screen === 'bristagram' && TR.story) return setTheme('#000000', true);
+  const t = THEME[S.screen];
+  setTheme(t ? t() : '#000000', ['bloqueo', 'inicio', 'llamada'].includes(S.screen));
+}
+// Mide el color promedio de la franja superior del fondo de pantalla tal como se muestra (cover, centrado).
+export async function calcularColorFondo() {
+  let c = '#5571AA';
+  if (M.fondo) {
+    try {
+      const img = new Image();
+      img.src = M.fondo;
+      await img.decode();
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      const k = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+      const sw = W / k;
+      const sx = (img.naturalWidth - sw) / 2;
+      const sy = Math.max(0, (img.naturalHeight - H / k) / 2);
+      const cv = document.createElement('canvas');
+      cv.width = 24; cv.height = 2;
+      const ctx = cv.getContext('2d');
+      ctx.drawImage(img, sx, sy, sw, 24 / k, 0, 0, 24, 2);
+      const d = ctx.getImageData(0, 0, 24, 2).data;
+      let r = 0, g = 0, b = 0;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+      const n = d.length / 4;
+      c = '#' + [r, g, b].map((v) => Math.round(v / n).toString(16).padStart(2, '0')).join('');
+    } catch (e) { /* queda el predeterminado */ }
+  }
+  colorFondo = c;
+  document.documentElement.style.setProperty('--fondo-top', c);
+  if (S.screen === 'bloqueo' || S.screen === 'inicio') themeActual();
 }
 // anim: 'open' (abrir app), 'close' (volver a Inicio), 'unlock' (desbloquear), 'fade'
 export function go(screen, anim) {
@@ -515,7 +545,7 @@ function verFotoPerfil(el, origen) {
     <div class="pv-nav"><button class="pv-back" aria-label="Volver" data-pvclose>${I.chevronLeft}</button><span class="pv-name">${esc(nombreContacto())}</span><span style="width:44px"></span></div>
     <div class="pv-img"><img src="${perfilSrc()}" alt=""></div>`;
   el.appendChild(pv);
-  setTheme(GRIS_IOS, true);
+  setTheme('#000000', true);
   const cerrar = () => { pv.classList.add('pv-out'); setTimeout(() => pv.remove(), 260); themeActual(); };
   pv.querySelector('[data-pvclose]').onclick = cerrar;
 }
@@ -1033,7 +1063,7 @@ function initViewport() {
     detectarBarra();
     // Con la barra translúcida, iOS informa una altura más corta (le resta la barra de arriba):
     // la altura real de la app es la de la pantalla.
-    const translucida = document.body.classList.contains('barra-translucida') && navigator.standalone;
+    const translucida = document.body.classList.contains('barra-translucida') && esApp();
     const completa = translucida ? Math.max(window.innerHeight, screen.height) : window.innerHeight;
     const visible = vv ? vv.height : window.innerHeight;
     const teclado = completa - visible > 150;
@@ -1052,11 +1082,13 @@ function initViewport() {
 // ---------- Arranque ----------
 function detectarBarra() {
   const probe = document.createElement('div');
-  probe.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top,0px);visibility:hidden';
+  probe.style.cssText = 'position:fixed;top:0;left:0;padding-top:env(safe-area-inset-top,0px);visibility:hidden';
   document.body.appendChild(probe);
-  document.body.classList.toggle('barra-translucida', probe.getBoundingClientRect().height > 0);
+  const inset = parseFloat(getComputedStyle(probe).paddingTop) || 0;
+  document.body.classList.toggle('barra-translucida', inset > 0);
   probe.remove();
 }
+const esApp = () => navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 async function boot() {
   load();
   document.documentElement.style.setProperty('--extra-top', (A.extraTop || 0) + 'px');
@@ -1066,6 +1098,7 @@ async function boot() {
   }
   if (!G) G = await (await fetch('contenido/guion.json')).json();
   await cargarMedios();
+  await calcularColorFondo();
   initViewport();
   initToques();
   initMenu();

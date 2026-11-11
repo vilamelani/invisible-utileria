@@ -381,13 +381,12 @@ img, video { display: block; }
 .call-btns { isolation: isolate; }
 @media (prefers-reduced-motion: reduce) { .c.ringing svg, .call-btn.yes .c::before, .call-btn.yes .c::after { animation: none; } }
 
-/* ---------- Barra de estado: fundido en las pantallas oscuras ----------
-   En modo "texto oscuro" de la barra, iOS pinta la barra de las pantallas oscuras con #1C1C1E.
-   Este degradé funde el borde superior del fondo en ese gris para que no se vea una franja cortada.
-   Si la app pasa por debajo de la barra (modo "texto blanco" activo), no hace falta. */
-.top-fade { position: absolute; left: 0; right: 0; top: 0; height: 120px; z-index: 1; pointer-events: none;
-  background: linear-gradient(180deg, #1C1C1E 0%, rgba(28, 28, 30, 0.82) 22%, rgba(28, 28, 30, 0.35) 60%, rgba(28, 28, 30, 0) 100%); }
-/* Solo se ve cuando la app NO pasa por debajo de la barra (inset 0); si no, mide 0. */
-.top-fade { height: max(0px, calc(120px - env(safe-area-inset-top, 0px) * 1000)); }
-.call .top-fade { height: max(0px, calc(200px - env(safe-area-inset-top, 0px) * 1000)); }
-
+/* ---------- Barra de estado: fundido en las pantallas con fondo ----------
+   En modo "texto oscuro", iOS pinta la barra con el color de fondo de la página (--fondo-top, medido
+   sobre el fondo de pantalla). Este degradé corto funde el borde superior del fondo en ese color.
+   Si la app pasa por debajo de la barra (inset > 0) mide 0. */
+.top-fade { position: absolute; left: 0; right: 0; top: 0; z-index: 1; pointer-events: none;
+  height: max(0px, calc(56px - env(safe-area-inset-top, 0px) * 1000));
+  background: linear-gradient(180deg, var(--fondo-top, #5571AA) 0%, transparent 100%); }
+.call .top-fade { height: max(0px, calc(160px - env(safe-area-inset-top, 0px) * 1000));
+  background: linear-gradient(180deg, #1D1B22 0%, rgba(29, 27, 34, 0.6) 40%, rgba(29, 27, 34, 0) 100%); }

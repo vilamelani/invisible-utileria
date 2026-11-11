@@ -2,7 +2,7 @@
 // Se abre manteniendo apretada 0,7 s la esquina superior izquierda.
 import {
   S, A, getG, setGuion, borrarGuionEditado, go, render, save, saveAjustes, planos, cargarPlano,
-  siguiente, deshacer, reiniciarTodo, reiniciarEco, ecoSiguiente, iniciarLlamada, estadoTexto, hhmm, ahora, LS_BARRA
+  siguiente, deshacer, reiniciarTodo, reiniciarEco, ecoSiguiente, iniciarLlamada, estadoTexto, hhmm, ahora, LS_BARRA, calcularColorFondo
 } from './app.js';
 import { M, MEDIOS, guardarMedio, borrarMedio, esVideo } from './media.js';
 
@@ -78,13 +78,13 @@ function pintar() {
     <section>
       <h3>Barra de estado (arriba de todo)</h3>
       <div class="row">
-        <button class="btn ${barra() === 'default' ? 'on' : ''}" data-barra="default">Texto oscuro</button>
-        <button class="btn ${barra() === 'black-translucent' ? 'on' : ''}" data-barra="black-translucent">Texto blanco</button>
+        <button class="btn ${barra() === 'default' ? 'on' : ''}" data-barra="default">Normal (recomendado)</button>
+        <button class="btn ${barra() === 'black-translucent' ? 'on' : ''}" data-barra="black-translucent">Translúcida</button>
         <button class="btn ${barra() === 'auto' ? 'on' : ''}" data-barra="auto">Automático (prueba)</button>
       </div>
       <div class="row"><label>Espacio extra bajo la barra (px) <input type="number" step="2" min="0" data-num="extraTop" value="${A.extraTop}"></label></div>
       <p class="note">Solo con "Texto blanco": iOS desenfoca lo que queda debajo de la barra y un poco más abajo. Este espacio baja el contenido para que ningún texto quede desenfocado. 0 = pegado a la barra.</p>
-      <p class="note">Texto oscuro: la barra toma el color de cada pantalla (bien para TalkGram y Eco). Texto blanco: la app pasa por debajo de la barra (bien para bloqueo, Inicio, historias y llamada). Automático: intenta cambiar según la pantalla; puede no funcionar en todos los iOS. Después de cambiarlo, cerrá la app desde el selector de apps y volvé a abrirla.</p>
+      <p class="note">Normal: la barra toma el color de la parte de arriba de cada pantalla y iOS elige solo si el texto va blanco o negro. Translúcida: la app pasa por debajo de la barra; en iOS 26 achica la pantalla y desenfoca la parte de arriba (no recomendado). iOS guarda este ajuste al instalar: después de cambiarlo hay que borrar el ícono y volver a agregarlo desde Safari.</p>
     </section>
 
     <section>
@@ -137,7 +137,7 @@ async function onClick(ev) {
   }
   if (t.dataset.go) { cerrar(); go(t.dataset.go); return; }
   if (t.dataset.set) { A[t.dataset.set] = t.dataset.val; saveAjustes(); pintar(); return; }
-  if (t.dataset.del) { await borrarMedio(t.dataset.del); pintar(); return; }
+  if (t.dataset.del) { await borrarMedio(t.dataset.del); if (t.dataset.del === 'fondo') await calcularColorFondo(); pintar(); return; }
   const G = getG();
   switch (t.dataset.act) {
     case 'cerrar': cerrar(); if (S.screen !== 'bristagram') render(); break;
@@ -184,7 +184,7 @@ async function onChange(ev) {
   const t = ev.target;
   if (t.dataset.file) {
     const f = t.files && t.files[0];
-    if (f) { await guardarMedio(t.dataset.file, f); pintar(); }
+    if (f) { await guardarMedio(t.dataset.file, f); if (t.dataset.file === 'fondo') await calcularColorFondo(); pintar(); }
     return;
   }
   if (t.dataset.chk) { A[t.dataset.chk] = t.checked; saveAjustes(); return; }

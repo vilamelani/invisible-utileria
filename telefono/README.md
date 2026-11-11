@@ -50,13 +50,11 @@ python3 -m http.server 8000
 
 ### Barra de estado
 
-La barra de arriba (hora, señal, batería) es la del iPhone y no se puede ocultar. En el menú oculto, sección Barra de estado, hay tres modos:
+La barra de arriba (hora, señal, batería) es la del iPhone y no se puede ocultar. En modo **Normal** (el predeterminado) iOS la pinta con el color de la parte de arriba de cada pantalla y elige solo si el texto va blanco o negro. En el bloqueo y el Inicio, el color se mide sobre el fondo de pantalla cargado.
 
-- **Texto oscuro**: en las pantallas claras la barra toma el color de la pantalla. En las oscuras (bloqueo, Inicio, llamada, historias) iOS la pinta gris oscuro (#1C1C1E) con texto blanco, y la app funde el borde superior del fondo en ese gris.
-- **Texto blanco** (recomendado): la app se dibuja por debajo de la barra. En el iPhone 15 Pro el texto de la barra se adapta solo (negro en pantallas claras, blanco en oscuras). iOS desenfoca la zona bajo la barra: el menú tiene "Espacio extra bajo la barra" (36 px por defecto) para que ningún texto quede ahí.
-- **Automático (prueba)**: intenta cambiar de modo según la pantalla.
+El modo **Translúcida** del menú no se recomienda: en iOS 26 achica la pantalla y desenfoca la parte de arriba.
 
-iOS guarda este ajuste cuando se agrega el ícono a la pantalla de inicio. Para que un cambio se aplique de verdad: elegí el modo en el menú, borrá el ícono de la pantalla de inicio y volvé a agregarlo desde Safari. Las fotos y el estado se conservan.
+iOS guarda el modo cuando se agrega el ícono a la pantalla de inicio. Si se cambia, hay que borrar el ícono y volver a agregarlo desde Safari.
 
 ### Antes de cada jornada
 
