@@ -87,9 +87,12 @@ let CUR = null;
 let cleanup = null;
 const $ = (s) => (CUR ? CUR.querySelector(s) : null);
 const $$ = (s) => (CUR ? [...CUR.querySelectorAll(s)] : []);
+// En modo oscuro, iOS pinta la barra de estado con su propio gris (#1C1C1E) e ignora el color de la app.
+// Por eso las pantallas oscuras funden su borde superior en ese gris (ver .top-fade).
+const GRIS_IOS = '#1C1C1E';
 const THEME = {
-  bloqueo: ['#4A6AA8', true], inicio: ['#4A6AA8', true], bristagram: ['#FFFFFF', false],
-  talkgram: ['#F7F8F9', false], eco: ['#FFFFFF', false], llamada: ['#3B4459', true]
+  bloqueo: [GRIS_IOS, true], inicio: [GRIS_IOS, true], bristagram: ['#FFFFFF', false],
+  talkgram: ['#F7F8F9', false], eco: ['#FFFFFF', false], llamada: [GRIS_IOS, true]
 };
 function setTheme(color, oscuro) {
   document.querySelector('meta[name=theme-color]').setAttribute('content', color);
@@ -102,7 +105,7 @@ function setTheme(color, oscuro) {
   }
 }
 function themeActual() {
-  if (S.screen === 'bristagram' && TR.story) return setTheme('#000000', true);
+  if (S.screen === 'bristagram' && TR.story) return setTheme(GRIS_IOS, true);
   const t = THEME[S.screen] || ['#000000', true];
   setTheme(t[0], t[1]);
 }
@@ -154,7 +157,7 @@ const wallpaperHTML = () => `<div class="wallpaper"${M.fondo ? ` style="backgrou
 // ========== BLOQUEO ==========
 function scrBloqueo(el) {
   el.classList.add('lock');
-  el.innerHTML = `${wallpaperHTML()}
+  el.innerHTML = `${wallpaperHTML()}<div class="top-fade"></div>
     <div class="safe-top"></div>
     <div class="lock-top"><span class="lock-icon">${I.lock}</span><div class="lock-date">${esc(G.bloqueo.fecha)}</div><div class="lock-clock" data-clock>${hhmm()}</div></div>
     <div class="lock-notifs" data-notifs>${S.lockNotifs.slice(0, 4).map(notifHTML).join('')}</div>
@@ -205,7 +208,7 @@ function scrInicio(el) {
   el.classList.add('home');
   const ap = (k, lbl) => `<button class="home-app" data-app="${k}">${appIcon(k)}<span class="lbl">${lbl}</span></button>`;
   const w = G.inicio;
-  el.innerHTML = `${wallpaperHTML()}
+  el.innerHTML = `${wallpaperHTML()}<div class="top-fade"></div>
     <div class="safe-top"></div>
     <div class="home-body">
       <div class="home-grid">
@@ -511,7 +514,7 @@ function verFotoPerfil(el, origen) {
     <div class="pv-nav"><button class="pv-back" aria-label="Volver" data-pvclose>${I.chevronLeft}</button><span class="pv-name">${esc(nombreContacto())}</span><span style="width:44px"></span></div>
     <div class="pv-img"><img src="${perfilSrc()}" alt=""></div>`;
   el.appendChild(pv);
-  setTheme('#000000', true);
+  setTheme(GRIS_IOS, true);
   const cerrar = () => { pv.classList.add('pv-out'); setTimeout(() => pv.remove(), 260); themeActual(); };
   pv.querySelector('[data-pvclose]').onclick = cerrar;
 }
@@ -956,7 +959,7 @@ export function iniciarLlamada(desdeMenu = true) {
 function scrLlamada(el) {
   el.classList.add('call');
   const nombre = S.tg.agendado ? (S.tg.nombre || G.llamada.nombre) : G.contacto.numero;
-  const fondo = `<div class="call-bgimg" style="background-image:url('${perfilSrc()}')"></div>`;
+  const fondo = `<div class="call-bgimg" style="background-image:url('${perfilSrc()}')"></div><div class="top-fade"></div>`;
   if (TR.call.conectada) {
     el.innerHTML = `${fondo}<div class="safe-top"></div>
       <div class="call-top">${avatarHTML(96, 'margin-bottom:16px')}<span class="call-name">${esc(nombre)}</span><span class="call-sub" data-calltime>0:00</span></div>
@@ -1041,8 +1044,16 @@ function initViewport() {
 }
 
 // ---------- Arranque ----------
+function detectarBarra() {
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top,0px);visibility:hidden';
+  document.body.appendChild(probe);
+  document.body.classList.toggle('barra-translucida', probe.getBoundingClientRect().height > 0);
+  probe.remove();
+}
 async function boot() {
   load();
+  detectarBarra();
   const editado = localStorage.getItem(LS_GUION);
   if (editado) {
     try { G = JSON.parse(editado); } catch (e) { G = null; }

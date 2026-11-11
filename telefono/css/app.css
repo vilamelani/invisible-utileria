@@ -298,16 +298,16 @@ img, video { display: block; }
 /* ---------- Llamada entrante ---------- */
 .call { color: #fff; background: radial-gradient(ellipse 90% 60% at 50% 25%, #5D6B8C 0%, #2C3346 55%, #14161E 100%); align-items: center; }
 .call-bgimg { position: absolute; inset: -40px; background-size: cover; background-position: center; filter: blur(40px) brightness(0.55); }
-.call-top { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 70px; }
+.call-top { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 70px; }
 .call-sub { font-size: 17px; color: rgba(255, 255, 255, 0.75); letter-spacing: -0.2px; }
 .call-name { font-size: 36px; font-weight: 400; letter-spacing: -0.5px; }
 .call-av { margin-bottom: 16px; }
-.call-btns { position: relative; margin-top: auto; margin-bottom: 70px; width: 100%; display: flex; justify-content: space-between; padding: 0 56px; }
+.call-btns { position: relative; z-index: 2; margin-top: auto; margin-bottom: 70px; width: 100%; display: flex; justify-content: space-between; padding: 0 56px; }
 .call-btn { display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 15px; }
 .call-btn .c { width: 76px; height: 76px; border-radius: 38px; display: flex; align-items: center; justify-content: center; color: #fff; }
 .call-btn.no .c { background: var(--ios-red); }
 .call-btn.yes .c { background: var(--ios-green); }
-.call-small { position: relative; display: flex; justify-content: space-between; width: 100%; padding: 0 64px; margin-bottom: 44px; margin-top: auto; }
+.call-small { position: relative; z-index: 2; display: flex; justify-content: space-between; width: 100%; padding: 0 64px; margin-bottom: 44px; margin-top: auto; }
 .call-small div { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; color: rgba(255, 255, 255, 0.9); }
 .call-small .c { width: 44px; height: 44px; border-radius: 22px; background: rgba(255, 255, 255, 0.18); display: flex; align-items: center; justify-content: center; }
 
@@ -377,3 +377,16 @@ img, video { display: block; }
 }
 .call-btns { isolation: isolate; }
 @media (prefers-reduced-motion: reduce) { .c.ringing svg, .call-btn.yes .c::before, .call-btn.yes .c::after { animation: none; } }
+
+/* ---------- Barra de estado: fundido en las pantallas oscuras ----------
+   En modo "texto oscuro" de la barra, iOS pinta la barra de las pantallas oscuras con #1C1C1E.
+   Este degradé funde el borde superior del fondo en ese gris para que no se vea una franja cortada.
+   Si la app pasa por debajo de la barra (modo "texto blanco" activo), no hace falta. */
+.top-fade { position: absolute; left: 0; right: 0; top: 0; height: 120px; z-index: 1; pointer-events: none;
+  background: linear-gradient(180deg, #1C1C1E 0%, rgba(28, 28, 30, 0.82) 22%, rgba(28, 28, 30, 0.35) 60%, rgba(28, 28, 30, 0) 100%); }
+.barra-translucida .top-fade { display: none; }
+.call .top-fade { height: 200px; }
+.sv { background: linear-gradient(180deg, #1C1C1E 0, #000 48px); }
+.barra-translucida .sv { background: #000; }
+.pv { background: linear-gradient(180deg, #1C1C1E 0, #000 60px); }
+.barra-translucida .pv { background: #000; }

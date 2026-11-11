@@ -52,11 +52,11 @@ python3 -m http.server 8000
 
 La barra de arriba (hora, señal, batería) es la del iPhone y no se puede ocultar. En el menú oculto, sección Barra de estado, hay tres modos:
 
-- **Texto oscuro**: la barra toma el color de la pantalla. Va bien en TalkGram, Eco y el feed.
+- **Texto oscuro** (recomendado): en las pantallas claras la barra toma el color de la pantalla. En las oscuras (bloqueo, Inicio, llamada, historias) iOS la pinta gris oscuro (#1C1C1E) con texto blanco, y la app funde el borde superior del fondo en ese gris.
 - **Texto blanco**: la app se dibuja por debajo de la barra. Va bien en el bloqueo, Inicio, las historias y la llamada.
 - **Automático (prueba)**: intenta cambiar de modo según la pantalla.
 
-iOS lee este ajuste al abrir la app. Después de cambiarlo, cerrá la app desde el selector de apps y volvé a abrirla.
+iOS guarda este ajuste cuando se agrega el ícono a la pantalla de inicio. Para que un cambio se aplique de verdad: elegí el modo en el menú, borrá el ícono de la pantalla de inicio y volvé a agregarlo desde Safari. Las fotos y el estado se conservan.
 
 ### Antes de cada jornada
 

@@ -271,7 +271,9 @@ Código en `invisible-utileria/telefono/` (ver su README). Web app estática, of
   - En el menú: "Audios como audio / como texto", que define cómo se ven los audios al forzarlos o al cargar un plano.
 - `[DECIDIDO]` **Llamada**: el botón Aceptar "vibra" (se sacude y tiene ondas que se expanden).
 - **Barra de estado negra**: era el fondo negro de la página, que iOS usa para pintar la barra. Ahora la página toma el color de cada pantalla.
-  - `[PROPUESTA]` Tres modos en el menú: texto oscuro, texto blanco o automático (experimental). El texto de la barra no cambia de color solo en todos los iOS. **Hay que probar cuál queda mejor en el iPhone.**
+  - Prueba en el 15 Pro: en modo oscuro, iOS pinta la barra con su propio gris (`#1C1C1E`) e ignora el color de la app. Por eso el bloqueo, el Inicio y la llamada se veían con una franja gris.
+  - `[PROPUESTA]` Modo **texto oscuro** como base, con un degradé que funde el borde superior de las pantallas oscuras en ese gris.
+  - Pendiente: probar "texto blanco" (la app pasa por debajo de la barra), que puede ser más realista en las pantallas con foto. **Para que se aplique hay que borrar el ícono y volver a agregarlo**, porque iOS guarda el ajuste al instalar. Hay que revisar cómo quedan TalkGram y Eco con texto blanco.
 - `[PROPUESTA]` Con conexión, la app siempre baja la última versión. Sin conexión (modo avión) usa la guardada.
 
 ## 12. Próximo paso
