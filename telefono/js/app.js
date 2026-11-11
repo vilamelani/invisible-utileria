@@ -1,11 +1,12 @@
 // INVISIBLE — utilería del iPhone (dirección B · Clara)
 import { appIcon, I, tail, waveBars, sized } from './icons.js';
-import { M, cargarMedios, esVideo, guardarMedio } from './media.js';
+import { M, cargarMedios, esVideo, guardarMedio, src, srcEsVideo } from './media.js';
 import { initMenu, abrirMenu, refrescarMenu } from './menu.js';
 
 const LS_ESTADO = 'invisible-estado-v1';
 const LS_AJUSTES = 'invisible-ajustes-v1';
-const LS_GUION = 'invisible-guion-v1';
+const LS_GUION = 'invisible-guion-v2';
+export const LS_BARRA = 'invisible-barra';
 
 // ---------- Estado ----------
 export let G = null; // guion
@@ -16,6 +17,9 @@ export const A = {
   esperaSeguido: 1.8,    // seg. entre mensajes seguidos de Julián
   tipeo: true,           // mostrar "escribiendo…" antes de cada mensaje
   letras: 3,             // letras que aparecen por tecla (modo completar)
+  audiosComo: 'audio',   // cómo se muestran los audios de Martina al forzarlos o al cargar un plano
+  bloqueoAuto: true,     // en el bloqueo, las notificaciones entran solas
+  bloqueoEspera: 5,      // seg. desde que se muestra el bloqueo hasta la primera notificación
   reSonar: 4,            // seg. para que la llamada vuelva a entrar tras rechazarla (0 = no)
   reSonarVeces: 1,
   ecoVelocidad: 5,       // palabras por segundo de Eco
@@ -29,17 +33,22 @@ function estadoBase() {
     tg: { pos: 0, msgs: [], agendado: false, nombre: '' },
     eco: { pos: 0, msgs: [] },
     lockNotifs: [],
-    story: 0
+    bg: { visto: {} }
   };
 }
 export let S = estadoBase();
-const TR = { esperarToque: true, busy: false, typing: '', autoT: 0, typingT: 0, rec: null, playing: null, ecoStream: null, call: { volverA: 'talkgram', conectada: false, inicio: 0, sonadas: 0, reT: 0 } };
+const TR = {
+  esperarToque: true, busy: false, typing: '', autoT: 0, typingT: 0, lockT: 0,
+  rec: null, playing: null, ecoStream: null, ecoRec: null, story: null,
+  call: { volverA: 'talkgram', conectada: false, inicio: 0, sonadas: 0, reT: 0 }
+};
 
 export function save() { try { localStorage.setItem(LS_ESTADO, JSON.stringify(S)); } catch (e) { /* sin espacio */ } }
 export function saveAjustes() { try { localStorage.setItem(LS_AJUSTES, JSON.stringify(A)); } catch (e) { /* */ } }
 function load() {
   try { Object.assign(A, JSON.parse(localStorage.getItem(LS_AJUSTES) || '{}')); } catch (e) { /* */ }
   try { const s = JSON.parse(localStorage.getItem(LS_ESTADO) || 'null'); if (s) S = Object.assign(estadoBase(), s); } catch (e) { /* */ }
+  if (!S.bg) S.bg = { visto: {} };
   if (S.screen === 'llamada') S.screen = 'talkgram';
 }
 export function getG() { return G; }
@@ -66,38 +75,75 @@ export function hhmm(d = ahora()) {
 }
 const fmtDur = (s) => Math.floor(s / 60) + ':' + String(Math.round(s % 60)).padStart(2, '0');
 const nombreContacto = () => (S.tg.agendado ? (S.tg.nombre || G.contacto.nombreAgendado) : G.contacto.numero);
+const perfilSrc = () => M.perfilJulian || 'contenido/default/av-julian.jpg';
 function avatarHTML(size, extra = '') {
-  return `<span class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.4)}px;${extra}">${M.perfilJulian ? `<img src="${M.perfilJulian}" alt="">` : 'J'}</span>`;
+  return `<span class="avatar" style="width:${size}px;height:${size}px;${extra}"><img src="${perfilSrc()}" alt=""></span>`;
 }
+const durEstimada = (t) => Math.max(2, Math.round(String(t || '').split(/\s+/).length * 0.45 + 1));
 
-// ---------- Router ----------
+// ---------- Router con transiciones ----------
 const app = document.getElementById('app');
+let CUR = null;
 let cleanup = null;
-const THEME = { bloqueo: '#4A6AA8', inicio: '#4A6AA8', bristagram: '#000000', talkgram: '#F8F9FA', eco: '#FFFFFF', llamada: '#3B4459' };
-function setTheme(c) {
-  document.querySelector('meta[name=theme-color]').setAttribute('content', c);
-  document.body.style.background = c;
+const $ = (s) => (CUR ? CUR.querySelector(s) : null);
+const $$ = (s) => (CUR ? [...CUR.querySelectorAll(s)] : []);
+const THEME = {
+  bloqueo: ['#4A6AA8', true], inicio: ['#4A6AA8', true], bristagram: ['#FFFFFF', false],
+  talkgram: ['#F7F8F9', false], eco: ['#FFFFFF', false], llamada: ['#3B4459', true]
+};
+function setTheme(color, oscuro) {
+  document.querySelector('meta[name=theme-color]').setAttribute('content', color);
+  document.documentElement.style.background = color;
+  document.body.style.background = color;
+  document.documentElement.style.colorScheme = oscuro ? 'dark' : 'light';
+  if ((localStorage.getItem(LS_BARRA) || 'default') === 'auto') {
+    const m = document.querySelector('meta[name=apple-mobile-web-app-status-bar-style]');
+    if (m) m.setAttribute('content', oscuro ? 'black-translucent' : 'default');
+  }
 }
-export function go(screen) {
+function themeActual() {
+  if (S.screen === 'bristagram' && TR.story) return setTheme('#000000', true);
+  const t = THEME[S.screen] || ['#000000', true];
+  setTheme(t[0], t[1]);
+}
+// anim: 'open' (abrir app), 'close' (volver a Inicio), 'unlock' (desbloquear), 'fade'
+export function go(screen, anim) {
   if (S.screen !== 'llamada' && screen === 'llamada') TR.call.volverA = S.screen;
   S.screen = screen;
   save();
-  render();
+  render(anim);
 }
-export function render() {
+export function render(anim) {
   if (cleanup) { cleanup(); cleanup = null; }
-  app.innerHTML = '';
+  const old = CUR;
   const el = document.createElement('div');
   el.className = 'screen';
-  app.appendChild(el);
+  CUR = el;
+  if (old && anim) {
+    old.style.pointerEvents = 'none';
+    if (anim === 'close' || anim === 'unlock') {
+      app.insertBefore(el, old);
+      old.classList.add('on-top', `a-${anim}-out`);
+    } else {
+      app.appendChild(el);
+      el.classList.add('on-top');
+      old.classList.add(`a-${anim}-under`);
+    }
+    el.classList.add(`a-${anim}-in`);
+    setTimeout(() => { old.remove(); el.classList.remove('on-top', `a-${anim}-in`); }, 460);
+  } else {
+    app.innerHTML = '';
+    app.appendChild(el);
+  }
+  TR.story = null;
   cleanup = (SCREENS[S.screen] || SCREENS.inicio)(el) || null;
-  setTheme(THEME[S.screen] || '#000000');
+  themeActual();
 }
 
 // ---------- Reloj ----------
 function tick() {
   document.querySelectorAll('[data-clock]').forEach((n) => { n.textContent = hhmm(); });
-  const ct = document.querySelector('[data-calltime]');
+  const ct = $('[data-calltime]');
   if (ct && TR.call.conectada) ct.textContent = fmtDur((Date.now() - TR.call.inicio) / 1000);
 }
 setInterval(tick, 1000);
@@ -111,28 +157,53 @@ function scrBloqueo(el) {
   el.innerHTML = `${wallpaperHTML()}
     <div class="safe-top"></div>
     <div class="lock-top"><span class="lock-icon">${I.lock}</span><div class="lock-date">${esc(G.bloqueo.fecha)}</div><div class="lock-clock" data-clock>${hhmm()}</div></div>
-    <div class="lock-notifs" data-notifs></div>
-    <div class="lock-bottom"><span class="lock-round">${I.flashlight}</span><span class="lock-round">${I.camera}</span></div>`;
-  renderLockNotifs();
+    <div class="lock-notifs" data-notifs>${S.lockNotifs.slice(0, 4).map(notifHTML).join('')}</div>
+    <div class="lock-bottom"><span class="lock-round">${I.flashlight}</span><span class="lock-round">${I.camera}</span></div>
+    <div class="safe-bottom"></div>`;
   el.querySelector('[data-notifs]').addEventListener('click', (e) => {
-    if (e.target.closest('.notif')) { S.lockNotifs = []; go('talkgram'); }
+    if (e.target.closest('.notif')) { S.lockNotifs = []; go('talkgram', 'unlock'); }
   });
-  return swipeUp(el, () => go('inicio'), 0.45);
-}
-function renderLockNotifs() {
-  const box = document.querySelector('[data-notifs]');
-  if (!box) return;
-  const list = S.lockNotifs.slice(0, 3);
-  box.innerHTML = list.map((n, i) => `${notifHTML(n)}${i === list.length - 1 && S.lockNotifs.length > 3 ? '<div class="notif-stack-more"></div>' : ''}`).join('');
+  // Notificaciones automáticas: si lo próximo del guion es un mensaje de Julián, entra solo.
+  const ev = G.talkgram[S.tg.pos];
+  if (A.bloqueoAuto && ev && ev.de === 'julian' && !TR.busy) {
+    TR.lockT = setTimeout(() => {
+      TR.esperarToque = false;
+      clearTimeout(TR.autoT);
+      dispararJulian(G.talkgram[S.tg.pos]);
+    }, A.bloqueoEspera * 1000);
+  }
+  swipeUp(el, () => go('inicio', 'unlock'));
+  return () => clearTimeout(TR.lockT);
 }
 function notifHTML(n) {
   return `<button class="notif">${appIcon('talkgram', 38)}<span class="notif-body"><span class="notif-head"><span class="notif-title">${esc(n.titulo)}</span><span class="notif-time">${esc(n.cuando || 'ahora')}</span></span><span class="notif-text">${esc(n.texto)}</span></span></button>`;
+}
+function agregarNotifBloqueo(n) {
+  S.lockNotifs.unshift(n);
+  save();
+  const box = $('[data-notifs]');
+  if (!box) return;
+  const antes = [...box.children].map((c) => [c, c.getBoundingClientRect().top]);
+  box.insertAdjacentHTML('afterbegin', notifHTML(n));
+  box.firstElementChild.classList.add('notif-new');
+  while (box.children.length > 4) box.lastElementChild.remove();
+  antes.forEach(([c, t0]) => {
+    if (!c.isConnected) return;
+    const d = t0 - c.getBoundingClientRect().top;
+    if (!d) return;
+    c.style.transition = 'none';
+    c.style.transform = `translateY(${d}px)`;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      c.style.transition = 'transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1)';
+      c.style.transform = '';
+    }));
+  });
 }
 
 // ========== INICIO ==========
 function scrInicio(el) {
   el.classList.add('home');
-  const app = (k, lbl) => `<button class="home-app" data-app="${k}">${appIcon(k)}<span class="lbl">${lbl}</span></button>`;
+  const ap = (k, lbl) => `<button class="home-app" data-app="${k}">${appIcon(k)}<span class="lbl">${lbl}</span></button>`;
   const w = G.inicio;
   el.innerHTML = `${wallpaperHTML()}
     <div class="safe-top"></div>
@@ -140,8 +211,8 @@ function scrInicio(el) {
       <div class="home-grid">
         <div class="widget widget-weather"><span class="city">${esc(w.ciudad)} ${I.locArrow}</span><span class="temp">${esc(w.temperatura)}</span><span style="flex:1"></span>${I.moon}<span class="cond">${esc(w.clima)}</span><span class="mm">${esc(w.maxmin)}</span></div>
         <div class="widget widget-photo">${M.fotoWidget ? `<img src="${M.fotoWidget}" alt="">` : ''}<span class="cap">${esc(w.tituloFoto)}</span></div>
-        ${app('fotos', 'Fotos')}${app('camara', 'Cámara')}${app('mapas', 'Mapas')}${app('reloj', 'Reloj')}
-        ${app('bristagram', 'Bristagram')}${app('eco', 'Eco')}${app('correo', 'Correo')}${app('notas', 'Notas')}
+        ${ap('fotos', 'Fotos')}${ap('camara', 'Cámara')}${ap('mapas', 'Mapas')}${ap('reloj', 'Reloj')}
+        ${ap('bristagram', 'Bristagram')}${ap('eco', 'Eco')}${ap('correo', 'Correo')}${ap('notas', 'Notas')}
       </div>
     </div>
     <div class="home-search">${I.search}<span>Buscar</span></div>
@@ -156,59 +227,184 @@ function scrInicio(el) {
     const b = e.target.closest('[data-app]');
     if (!b) return;
     const k = b.dataset.app;
-    if (k === 'bristagram') { S.story = 0; go('bristagram'); }
-    if (k === 'talkgram') go('talkgram');
-    if (k === 'eco') go('eco');
+    const destino = { bristagram: 'bristagram', talkgram: 'talkgram', eco: 'eco' }[k];
+    if (!destino) return;
+    const r = b.querySelector('.app-icon').getBoundingClientRect();
+    app.style.setProperty('--ox', `${r.left + r.width / 2}px`);
+    app.style.setProperty('--oy', `${r.top + r.height / 2}px`);
+    go(destino, 'open');
   });
 }
 
 // ========== BRISTAGRAM ==========
 function scrBristagram(el) {
-  el.classList.add('bg-story');
-  const keys = ['historia1', 'historia2', 'historia3'].filter((k) => M[k]);
-  const n = Math.max(keys.length, 1);
-  let idx = Math.min(S.story || 0, n - 1);
-  const dur = (G.bristagram.segundosPorHistoria || 6) * 1000;
-  let t0 = performance.now();
-  let raf = 0;
-  el.innerHTML = `<div class="safe-top"></div>
-    <div class="story-card" data-card>
-      <div data-media></div>
-      <div class="story-shade"></div>
-      <div class="story-bars">${Array.from({ length: n }, () => '<span class="story-bar"><i></i></span>').join('')}</div>
-      <div class="story-head">${avatarHTML(32)}<span class="story-user">${esc(G.bristagram.usuario)}</span><span class="story-time">${esc(G.bristagram.hace)}</span><span style="flex:1"></span>
-        <button class="icon-btn" aria-label="Más opciones">${I.more}</button><button class="icon-btn" aria-label="Cerrar" data-close>${I.close}</button></div>
-      <button class="story-tap l" aria-label="Anterior" data-prev></button><button class="story-tap r" aria-label="Siguiente" data-next></button>
+  el.classList.add('bg');
+  const B = G.bristagram;
+  const ring = (u, i) => `<button class="bg-st" data-u="${i}"><span class="bg-ring${S.bg.visto[u.usuario] ? ' seen' : ''}"><img src="${src(u.avatar)}" alt=""></span><span class="n">${esc(u.usuario)}</span></button>`;
+  const post = (p) => `<article class="bg-post">
+      <div class="bg-ph"><span class="bg-av"><img src="${src(p.avatar)}" alt=""></span><span class="bg-who"><b>${esc(p.usuario)}</b>${p.ubicacion ? `<span>${esc(p.ubicacion)}</span>` : ''}</span><button class="icon-btn" aria-label="Más opciones">${I.more}</button></div>
+      <div class="bg-img"><img src="${src(p)}" alt=""></div>
+      <div class="bg-actions"><button class="bg-ab" data-like aria-label="Me gusta">${I.bgHeart}</button><button class="bg-ab" aria-label="Comentar">${I.bgComment}</button><button class="bg-ab" aria-label="Compartir">${I.bgSend}</button><span style="flex:1"></span><button class="bg-ab" aria-label="Guardar">${I.bgSave}</button></div>
+      <p class="bg-likes">${esc(p.likes)}</p>
+      <p class="bg-cap"><b>${esc(p.usuario)}</b> ${esc(p.texto)}</p>
+      <p class="bg-time">${esc(p.hace)}</p>
+    </article>`;
+  el.innerHTML = `
+    <div class="bg-top"><div class="safe-top"></div>
+      <div class="bg-bar"><span class="bg-logo">Bristagram</span><span class="bg-logo-chev">${I.bgChevron}</span><span style="flex:1"></span>
+        <button class="bg-ab" aria-label="Notificaciones">${I.bgHeart}</button><button class="bg-ab" aria-label="Mensajes">${I.bgDM}<span class="bg-badge">3</span></button></div>
     </div>
-    <div class="story-reply"><span class="field">Enviar mensaje</span><button class="icon-btn" style="width:30px" aria-label="Me gusta">${I.heart}</button><button class="icon-btn" style="width:30px" aria-label="Compartir">${I.share}</button></div>`;
-  const bars = el.querySelectorAll('.story-bar i');
-  function show() {
-    const box = el.querySelector('[data-media]');
-    const k = keys[idx];
-    if (!k) box.innerHTML = '<div class="story-empty">Cargá las historias de Julián desde el menú oculto (fiesta de Halloween, Julián con Agustina).</div>';
-    else if (esVideo(k)) box.innerHTML = `<video src="${M[k]}" autoplay muted playsinline loop></video>`;
-    else box.innerHTML = `<img src="${M[k]}" alt="">`;
-    bars.forEach((b, i) => { b.style.width = i < idx ? '100%' : '0%'; });
-    t0 = performance.now();
-    S.story = idx; save();
+    <div class="bg-scroll">
+      <div class="bg-stories">
+        <button class="bg-st me"><span class="bg-ring none"><img src="${src(B.miAvatar)}" alt=""><span class="bg-plus">${I.bgPlus}</span></span><span class="n">Tu historia</span></button>
+        ${B.historias.map(ring).join('')}
+      </div>
+      ${B.posts.map(post).join('')}
+    </div>
+    <div class="bg-tabs">
+      <span class="on">${I.bgHome}</span><span>${I.bgSearch}</span><span>${I.bgAdd}</span><span>${I.bgReels}</span><span class="bg-tab-av"><img src="${src(B.miAvatar)}" alt=""></span>
+    </div>
+    <div class="safe-bottom bg-safe"></div>`;
+  el.addEventListener('click', (e) => {
+    const st = e.target.closest('[data-u]');
+    if (st) return abrirHistorias(el, +st.dataset.u, st.querySelector('.bg-ring'));
+    const like = e.target.closest('[data-like]');
+    if (like) { like.classList.toggle('liked'); like.innerHTML = like.classList.contains('liked') ? I.bgHeartFill : I.bgHeart; }
+  });
+  return () => { if (TR.story) { cancelAnimationFrame(TR.story.raf); TR.story = null; } };
+}
+
+function abrirHistorias(el, u, ringEl) {
+  const B = G.bristagram;
+  const r = ringEl.getBoundingClientRect();
+  const sv = document.createElement('div');
+  sv.className = 'sv';
+  sv.style.transformOrigin = `${r.left + r.width / 2}px ${r.top + r.height / 2}px`;
+  el.appendChild(sv);
+  const dur = (B.segundosPorHistoria || 6) * 1000;
+  const st = { u, i: 0, t0: 0, pausa: 0, raf: 0, enPausa: false, origen: ringEl };
+  TR.story = st;
+  themeActual();
+
+  const itemHTML = (it) => {
+    let fondo;
+    if (it.fondo) fondo = `<div class="sv-media" style="background:${it.fondo}"></div>`;
+    else if (srcEsVideo(it)) fondo = `<video class="sv-media" src="${src(it)}" autoplay muted playsinline loop></video>`;
+    else fondo = `<img class="sv-media" src="${src(it)}" alt="">`;
+    const texto = it.texto ? `<div class="sv-text${it.fondo ? ' solo' : ''}"><span>${esc(it.texto)}</span></div>` : '';
+    return fondo + texto;
+  };
+  function pintar(dir) {
+    const user = B.historias[st.u];
+    S.bg.visto[user.usuario] = true;
+    save();
+    sv.innerHTML = `<div class="safe-top"></div>
+      <div class="sv-card${dir ? ' sv-in-' + dir : ''}">
+        <div data-media>${itemHTML(user.items[st.i])}</div>
+        <div class="story-shade"></div>
+        <div class="story-bars">${user.items.map(() => '<span class="story-bar"><i></i></span>').join('')}</div>
+        <div class="story-head"><span class="avatar" style="width:32px;height:32px"><img src="${src(user.avatar)}" alt=""></span><span class="story-user">${esc(user.usuario)}</span><span class="story-time" data-hace>${esc(user.items[st.i].hace || '')}</span><span style="flex:1"></span>
+          <button class="icon-btn" aria-label="Más opciones">${I.more}</button><button class="icon-btn" aria-label="Cerrar" data-close>${I.close}</button></div>
+      </div>
+      <div class="story-reply"><span class="field">Enviar mensaje</span><button class="icon-btn" style="width:30px" aria-label="Me gusta">${I.heart}</button><button class="icon-btn" style="width:30px" aria-label="Compartir">${I.share}</button></div>
+      <div class="safe-bottom"></div>`;
+    sv.querySelector('[data-close]').onclick = cerrar;
+    mostrarItem();
+  }
+  function mostrarItem() {
+    const user = B.historias[st.u];
+    const box = sv.querySelector('[data-media]');
+    box.innerHTML = itemHTML(user.items[st.i]);
+    sv.querySelector('[data-hace]').textContent = user.items[st.i].hace || '';
+    sv.querySelectorAll('.story-bar i').forEach((b, k) => { b.style.width = k < st.i ? '100%' : '0%'; });
+    st.t0 = performance.now();
+    st.pausa = 0;
+  }
+  function siguienteItem() {
+    const user = B.historias[st.u];
+    if (st.i < user.items.length - 1) { st.i++; mostrarItem(); return; }
+    if (st.u < B.historias.length - 1) { st.u++; st.i = 0; pintar('right'); return; }
+    cerrar();
+  }
+  function anteriorItem() {
+    if (st.i > 0) { st.i--; mostrarItem(); return; }
+    if (st.u > 0) { st.u--; st.i = 0; pintar('left'); return; }
+    mostrarItem();
+  }
+  function cambiarUsuario(delta) {
+    const n = st.u + delta;
+    if (n < 0) { mostrarItem(); return; }
+    if (n >= B.historias.length) { cerrar(); return; }
+    st.u = n; st.i = 0;
+    pintar(delta > 0 ? 'right' : 'left');
   }
   function frame(t) {
-    const p = Math.min(1, (t - t0) / dur);
-    if (bars[idx]) bars[idx].style.width = (p * 100) + '%';
-    if (p >= 1 && idx < n - 1) { idx++; show(); }
-    raf = requestAnimationFrame(frame);
+    if (TR.story !== st) return;
+    if (!st.enPausa) {
+      const p = Math.min(1, (t - st.t0 - st.pausa) / dur);
+      const bar = sv.querySelectorAll('.story-bar i')[st.i];
+      if (bar) bar.style.width = (p * 100) + '%';
+      if (p >= 1) siguienteItem();
+    }
+    st.raf = requestAnimationFrame(frame);
   }
-  show();
-  raf = requestAnimationFrame(frame);
-  el.querySelector('[data-next]').onclick = () => { if (idx < n - 1) { idx++; show(); } };
-  el.querySelector('[data-prev]').onclick = () => { if (idx > 0) idx--; show(); };
-  el.querySelector('[data-close]').onclick = () => go('inicio');
-  return () => cancelAnimationFrame(raf);
+  function cerrar() {
+    if (TR.story !== st) return;
+    cancelAnimationFrame(st.raf);
+    TR.story = null;
+    sv.classList.add('sv-out');
+    setTimeout(() => sv.remove(), 300);
+    el.querySelectorAll('.bg-st').forEach((b) => {
+      const k = b.dataset.u;
+      if (k !== undefined) b.querySelector('.bg-ring').classList.toggle('seen', !!S.bg.visto[B.historias[k].usuario]);
+    });
+    themeActual();
+  }
+  // Gestos: toque a la derecha/izquierda, deslizar horizontal (cambia de persona), deslizar hacia abajo (cierra), mantener (pausa)
+  let g = null;
+  sv.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button,.story-reply')) return;
+    g = { x: e.clientX, y: e.clientY, t: performance.now(), pausadoEn: performance.now() };
+    st.enPausa = true;
+  });
+  sv.addEventListener('pointermove', (e) => {
+    if (!g) return;
+    const card = sv.querySelector('.sv-card');
+    const dx = e.clientX - g.x;
+    const dy = e.clientY - g.y;
+    if (dy > 10 && Math.abs(dy) > Math.abs(dx)) card.style.transform = `translateY(${dy}px) scale(${Math.max(0.85, 1 - dy / 1500)})`;
+    else if (Math.abs(dx) > 10) card.style.transform = `translateX(${dx}px)`;
+  });
+  const fin = (e) => {
+    if (!g) return;
+    const dx = e.clientX - g.x;
+    const dy = e.clientY - g.y;
+    const dt = performance.now() - g.t;
+    st.pausa += performance.now() - g.pausadoEn;
+    st.enPausa = false;
+    const card = sv.querySelector('.sv-card');
+    if (card) card.style.transform = '';
+    g = null;
+    if (e.type === 'pointercancel') return;
+    if (dy > 110 && dy > Math.abs(dx)) return cerrar();
+    if (Math.abs(dx) > 70) return cambiarUsuario(dx < 0 ? 1 : -1);
+    if (dt < 300 && Math.abs(dx) < 12 && Math.abs(dy) < 12) {
+      if (e.clientX < window.innerWidth / 3) anteriorItem(); else siguienteItem();
+    }
+  };
+  sv.addEventListener('pointerup', fin);
+  sv.addEventListener('pointercancel', fin);
+  pintar();
+  st.raf = requestAnimationFrame(frame);
 }
 
 // ========== TALKGRAM ==========
 const esperado = () => { const e = G.talkgram[S.tg.pos]; return e && e.de === 'martina' ? e : null; };
-function desdeEvento(e) {
+const aceptaTexto = (e) => e && e.de === 'martina' && typeof e.texto === 'string';
+const aceptaAudio = (e) => e && e.de === 'martina' && e.tipo !== 'foto';
+// Mensaje para mostrar a partir de un evento del guion. comoTexto fuerza que un audio de Martina se vea como texto.
+function desdeEvento(e, comoTexto) {
+  if (e.de === 'martina' && e.tipo === 'audio' && comoTexto && e.texto) return { de: e.de, tipo: 'texto', texto: e.texto, ev: e.id };
   const m = { de: e.de, tipo: e.tipo === 'audio-cancelado' ? 'audio' : e.tipo, ev: e.id };
   if (e.texto) m.texto = e.texto;
   if (e.media) m.media = e.media;
@@ -226,8 +422,8 @@ function msgHTML(m, i, arr) {
   const cls = `bub ${side}${first ? ' first' : ''}`;
   const t = first ? tail(side, color) : '';
   if (m.tipo === 'foto') {
-    const src = M[m.media];
-    return `<div class="${cls} photo" data-i="${i}">${t}<div class="ph">${src ? `<img src="${src}" alt="">` : `<span class="lbl">${etiquetaFoto[m.media] || 'Foto'} (cargar en el menú)</span>`}</div><span class="meta">${meta}</span></div>`;
+    const s = M[m.media];
+    return `<div class="${cls} photo" data-i="${i}">${t}<div class="ph">${s ? `<img src="${s}" alt="">` : `<span class="lbl">${etiquetaFoto[m.media] || 'Foto'} (cargar en el menú)</span>`}</div><span class="meta">${meta}</span></div>`;
   }
   if (m.tipo === 'audio') {
     const bars = waveBars(30, i + 3).map((h) => `<i style="height:${h}px"></i>`).join('');
@@ -235,6 +431,7 @@ function msgHTML(m, i, arr) {
   }
   return `<div class="${cls}" data-i="${i}">${t}${esc(m.texto)}<span class="meta">${meta}</span></div>`;
 }
+const puntosHTML = () => `<div class="bub in first typing" data-typing>${tail('in', '#FFFFFF')}<span class="dots"><i></i><i></i><i></i></span></div>`;
 
 function scrTalkGram(el) {
   el.classList.add('tg');
@@ -242,7 +439,8 @@ function scrTalkGram(el) {
     <div class="tg-top"><div class="safe-top"></div>
       <div class="tg-nav">
         <button class="tg-back" aria-label="Volver" data-back>${I.chevronLeft}</button>
-        <button class="tg-who" data-who>${avatarHTML(36)}<span class="tg-who-text"><span class="tg-name" data-name></span><span class="tg-status" data-status></span></span></button>
+        <button class="tg-av" aria-label="Ver foto de perfil" data-avatar>${avatarHTML(36)}</button>
+        <button class="tg-who" data-who><span class="tg-who-text"><span class="tg-name" data-name></span><span class="tg-status" data-status></span></span></button>
         <button class="tg-act" aria-label="Videollamada">${I.video}</button>
         <button class="tg-act" aria-label="Llamar">${I.phone}</button>
       </div>
@@ -254,7 +452,8 @@ function scrTalkGram(el) {
   tgLista();
   tgComposer('idle');
 
-  el.querySelector('[data-back]').onclick = () => go('inicio');
+  el.querySelector('[data-back]').onclick = () => go('inicio', 'close');
+  el.querySelector('[data-avatar]').onclick = (e) => verFotoPerfil(el, e.currentTarget);
   el.querySelector('[data-who]').onclick = () => hojaContacto(el);
   el.querySelector('[data-list]').addEventListener('click', (e) => {
     const p = e.target.closest('[data-play]');
@@ -275,30 +474,52 @@ function scrTalkGram(el) {
 }
 
 function tgHeader() {
-  const n = document.querySelector('[data-name]');
+  const n = $('[data-name]');
   if (!n) return;
   n.textContent = nombreContacto();
-  document.querySelector('[data-status]').textContent = TR.typing || G.contacto.estado;
+  $('[data-status]').textContent = TR.typing || G.contacto.estado;
 }
 function tgLista() {
-  const list = document.querySelector('[data-list]');
+  const list = $('[data-list]');
   if (!list) return;
   const card = S.tg.agendado ? '' : `<div class="tg-card"><p>Este número no está en tus contactos</p><div class="row"><button class="red">Bloquear</button><button class="acc" data-agregar>Agregar</button></div></div>`;
-  list.innerHTML = card + '<span class="tg-day">Hoy</span>' + S.tg.msgs.map(msgHTML).join('');
+  list.innerHTML = card + '<span class="tg-day">Hoy</span>' + S.tg.msgs.map(msgHTML).join('') + (TR.typing === 'escribiendo…' ? puntosHTML() : '');
   list.scrollTop = list.scrollHeight;
   scrollAbajo();
   setTimeout(scrollAbajo, 150);
   list.querySelectorAll('img').forEach((im) => im.addEventListener('load', scrollAbajo, { once: true }));
 }
 function scrollAbajo() {
-  const list = document.querySelector('[data-list]');
+  const list = $('[data-list]');
   if (list) requestAnimationFrame(() => { list.scrollTop = list.scrollHeight; });
 }
+function puntos(mostrar) {
+  const list = $('[data-list]');
+  if (!list) return;
+  const p = list.querySelector('[data-typing]');
+  if (mostrar && !p) { list.insertAdjacentHTML('beforeend', puntosHTML()); scrollAbajo(); }
+  if (!mostrar && p) p.remove();
+}
 
-// Composer: 'idle' (vacío), 'text' (con texto), 'rec' (grabando)
+// Visor de la foto de perfil
+function verFotoPerfil(el, origen) {
+  const r = origen.getBoundingClientRect();
+  const pv = document.createElement('div');
+  pv.className = 'pv';
+  pv.style.transformOrigin = `${r.left + r.width / 2}px ${r.top + r.height / 2}px`;
+  pv.innerHTML = `<div class="safe-top"></div>
+    <div class="pv-nav"><button class="pv-back" aria-label="Volver" data-pvclose>${I.chevronLeft}</button><span class="pv-name">${esc(nombreContacto())}</span><span style="width:44px"></span></div>
+    <div class="pv-img"><img src="${perfilSrc()}" alt=""></div>`;
+  el.appendChild(pv);
+  setTheme('#000000', true);
+  const cerrar = () => { pv.classList.add('pv-out'); setTimeout(() => pv.remove(), 260); themeActual(); };
+  pv.querySelector('[data-pvclose]').onclick = cerrar;
+}
+
+// Composer: 'idle' (vacío/escribiendo) o 'rec' (grabando)
 let typedN = 0;
 function tgComposer(estado) {
-  const box = document.querySelector('[data-bottom]');
+  const box = $('[data-bottom]');
   if (!box) return;
   if (estado === 'rec') {
     box.innerHTML = `<button class="tg-ibtn" aria-label="Descartar audio" data-trash style="color:#8A929C">${I.trash}</button>
@@ -308,12 +529,10 @@ function tgComposer(estado) {
     box.querySelector('[data-sendrec]').onclick = enviarAudio;
     return;
   }
-  const valorPrevio = box.querySelector('textarea') ? box.querySelector('textarea').value : '';
   box.innerHTML = `<button class="tg-ibtn" aria-label="Adjuntar">${I.plus}</button>
     <textarea class="tg-field" rows="1" placeholder="Mensaje" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" data-field></textarea>
     <span data-right style="display:flex"></span>`;
   const f = box.querySelector('[data-field]');
-  f.value = valorPrevio;
   const right = box.querySelector('[data-right]');
   const pintarDerecha = () => {
     if (f.value.length) {
@@ -321,14 +540,14 @@ function tgComposer(estado) {
       right.querySelector('[data-send]').onclick = enviarTexto;
     } else {
       right.innerHTML = `<button class="tg-ibtn" aria-label="Cámara" data-camb>${I.camera}</button><button class="tg-ibtn" aria-label="Nota de voz" data-mic style="width:36px">${I.mic}</button>`;
-      right.querySelector('[data-camb]').onclick = () => document.querySelector('[data-cam]').click();
+      right.querySelector('[data-camb]').onclick = () => $('[data-cam]').click();
       right.querySelector('[data-mic]').onclick = grabarAudio;
     }
   };
   const ajustarAlto = () => { f.style.height = 'auto'; f.style.height = Math.min(120, f.scrollHeight) + 'px'; };
   f.addEventListener('input', (e) => {
     const exp = esperado();
-    if (A.modo === 'completar' && exp && exp.tipo === 'texto') {
+    if (A.modo === 'completar' && aceptaTexto(exp)) {
       const borra = (e.inputType || '').startsWith('delete');
       typedN = borra ? Math.max(0, typedN - A.letras) : Math.min(exp.texto.length, typedN + A.letras);
       f.value = exp.texto.slice(0, typedN);
@@ -343,13 +562,13 @@ function tgComposer(estado) {
 }
 
 function enviarTexto() {
-  const f = document.querySelector('[data-field]');
+  const f = $('[data-field]');
   const v = f.value.trim();
   if (!v) return;
   const exp = esperado();
   let texto = v;
   let evId;
-  if (exp && exp.tipo === 'texto') {
+  if (aceptaTexto(exp)) {
     if (A.modo === 'completar') texto = exp.texto;
     evId = consumir();
   }
@@ -366,10 +585,10 @@ function grabarAudio() {
   TR.esperarToque = false;
   const t0 = Date.now();
   tgComposer('rec');
-  const wave = document.querySelector('[data-recwave]');
+  const wave = $('[data-recwave]');
   const iv = setInterval(() => {
     const s = (Date.now() - t0) / 1000;
-    const tEl = document.querySelector('[data-rect]');
+    const tEl = $('[data-rect]');
     if (tEl) tEl.textContent = fmtDur(s);
     if (wave) {
       const i = document.createElement('i');
@@ -398,8 +617,8 @@ function enviarAudio() {
   const exp = esperado();
   let dur = Math.max(1, Math.round(s));
   let evId;
-  if (exp && (exp.tipo === 'audio' || exp.tipo === 'audio-cancelado')) {
-    if (A.modo === 'completar' && exp.duracion) dur = exp.duracion;
+  if (aceptaAudio(exp)) {
+    if (A.modo === 'completar') dur = exp.duracion || durEstimada(exp.texto);
     evId = consumir();
   }
   agregarMsg({ de: 'martina', tipo: 'audio', duracion: dur, ev: evId });
@@ -408,12 +627,12 @@ function enviarAudio() {
 function reproducirAudio(i) {
   const m = S.tg.msgs[i];
   if (!m) return;
-  const node = document.querySelector(`.bub[data-i="${i}"]`);
+  const node = $(`.bub[data-i="${i}"]`);
   if (!node) return;
   const btn = node.querySelector('[data-play]');
   const bars = node.querySelectorAll('.audio-wave i');
   const durEl = node.querySelector('[data-dur]');
-  if (TR.playing && TR.playing.i === i) { // pausa
+  if (TR.playing && TR.playing.i === i) {
     cancelAnimationFrame(TR.playing.raf);
     TR.playing = null;
     btn.innerHTML = I.play;
@@ -456,12 +675,13 @@ function hojaContacto(el) {
     n = (e.inputType || '').startsWith('delete') ? Math.max(0, n - 1) : Math.min(objetivo.length, n + 1);
     inp.value = objetivo.slice(0, n);
   });
-  back.querySelector('[data-cancel]').onclick = () => back.remove();
+  const cerrar = () => { back.classList.add('out'); setTimeout(() => back.remove(), 260); };
+  back.querySelector('[data-cancel]').onclick = cerrar;
   back.querySelector('[data-ok]').onclick = () => {
     S.tg.agendado = true;
     S.tg.nombre = inp.value.trim() || G.contacto.nombreAgendado;
     save();
-    back.remove();
+    cerrar();
     tgHeader();
     tgLista();
   };
@@ -472,18 +692,27 @@ function hojaContacto(el) {
 function consumir() { const e = G.talkgram[S.tg.pos]; S.tg.pos++; save(); refrescarMenu(); return e ? e.id : undefined; }
 function marcarLeidos() { S.tg.msgs.forEach((m) => { if (m.de === 'martina') m.leido = true; }); }
 function setTyping(txt) {
+  const habia = !!TR.typing;
   TR.typing = txt;
   tgHeader();
-  if (txt) { marcarLeidos(); if (S.screen === 'talkgram') tgLista(); }
+  if (S.screen !== 'talkgram') return;
+  if (txt && !habia) {
+    marcarLeidos();
+    $$('.bub.out .meta svg path').forEach((p) => p.setAttribute('stroke', '#0B8F9E'));
+  }
+  puntos(txt === 'escribiendo…');
 }
 export function agregarMsg(m) {
   m.hora = hhmm();
   S.tg.msgs.push(m);
   save();
   if (S.screen === 'talkgram') {
-    const list = document.querySelector('[data-list]');
+    const list = $('[data-list]');
+    puntos(false);
     const i = S.tg.msgs.length - 1;
     list.insertAdjacentHTML('beforeend', msgHTML(m, i, S.tg.msgs));
+    const img = list.lastElementChild.querySelector('img');
+    if (img) img.addEventListener('load', scrollAbajo, { once: true });
     scrollAbajo();
   } else if (m.de === 'julian') {
     notificar(m);
@@ -498,12 +727,7 @@ function vistaPrevia(m) {
 }
 function notificar(m) {
   const n = { titulo: nombreContacto(), texto: vistaPrevia(m), cuando: 'ahora' };
-  if (S.screen === 'bloqueo') {
-    S.lockNotifs.unshift(n);
-    save();
-    renderLockNotifs();
-    return;
-  }
+  if (S.screen === 'bloqueo') { agregarNotifBloqueo(n); return; }
   if (S.screen === 'llamada') return;
   banner(n);
 }
@@ -511,13 +735,14 @@ function banner(n) {
   const layer = document.getElementById('banner-layer');
   layer.innerHTML = notifHTML(n);
   const b = layer.firstChild;
-  b.onclick = () => { layer.innerHTML = ''; go('talkgram'); };
+  b.onclick = () => { layer.innerHTML = ''; go('talkgram', 'open'); };
   requestAnimationFrame(() => requestAnimationFrame(() => b.classList.add('in')));
   setTimeout(() => { b.classList.remove('in'); setTimeout(() => { if (b.parentNode) b.remove(); }, 400); }, 5000);
 }
 function limpiarTimers() {
   clearTimeout(TR.autoT);
   clearTimeout(TR.typingT);
+  clearTimeout(TR.lockT);
   TR.busy = false;
   TR.typing = '';
 }
@@ -530,7 +755,7 @@ export function programarAuto() {
   TR.autoT = setTimeout(() => dispararJulian(ev), wait * 1000);
 }
 function dispararJulian(ev) {
-  if (TR.busy) return;
+  if (TR.busy || !ev || ev.de !== 'julian') return;
   TR.busy = true;
   if (ev.tipo === 'escribiendo') {
     setTyping('escribiendo…');
@@ -540,6 +765,7 @@ function dispararJulian(ev) {
   let t = 0.6;
   if (ev.tipo === 'texto' && A.tipeo) t = Math.min(3, 0.8 + ev.texto.length * 0.03);
   if (ev.tipo === 'audio') t = 1.6;
+  if (S.screen === 'bloqueo') t = 0.1;
   setTyping(ev.tipo === 'audio' ? 'grabando audio…' : 'escribiendo…');
   TR.typingT = setTimeout(() => {
     setTyping('');
@@ -555,11 +781,12 @@ export function siguiente() {
   if (S.screen === 'eco') return ecoSiguiente();
   if (TR.busy) return;
   clearTimeout(TR.autoT);
+  clearTimeout(TR.lockT);
   const ev = G.talkgram[S.tg.pos];
   if (!ev) return;
   if (ev.de === 'martina') { // el equipo fuerza el mensaje de Martina
     consumir();
-    if (ev.tipo !== 'audio-cancelado') agregarMsg(desdeEvento(ev));
+    if (ev.tipo !== 'audio-cancelado') agregarMsg(desdeEvento(ev, A.audiosComo === 'texto'));
     return;
   }
   dispararJulian(ev);
@@ -586,7 +813,7 @@ export function cargarPlano(i) {
   const base = ahora().getTime();
   const previos = G.talkgram.slice(0, i).filter((e) => e.tipo !== 'escribiendo' && e.tipo !== 'audio-cancelado');
   S.tg.pos = i;
-  S.tg.msgs = previos.map((e, k) => Object.assign(desdeEvento(e), { hora: hhmm(new Date(base - (previos.length - k) * 40000)), leido: true }));
+  S.tg.msgs = previos.map((e, k) => Object.assign(desdeEvento(e, A.audiosComo === 'texto'), { hora: hhmm(new Date(base - (previos.length - k) * 40000)), leido: true }));
   S.tg.agendado = G.talkgram.slice(0, i + 1).some((e) => e.yaAgendado);
   S.tg.nombre = S.tg.agendado ? G.contacto.nombreAgendado : '';
   S.lockNotifs = [];
@@ -597,9 +824,7 @@ export function cargarPlano(i) {
 export function reiniciarTodo() {
   limpiarTimers();
   TR.esperarToque = true;
-  const story = S.story;
   S = estadoBase();
-  S.story = story;
   save();
   render();
   refrescarMenu();
@@ -624,7 +849,7 @@ function scrEco(el) {
     <div class="eco-list" data-elist></div>
     <div class="eco-composer" data-ecomp></div>
     <div class="safe-bottom"></div>`;
-  el.querySelector('[data-home]').onclick = () => go('inicio');
+  el.querySelector('[data-home]').onclick = () => go('inicio', 'close');
   ecoLista();
   ecoComposer(false);
   return () => { if (TR.ecoRec) { clearInterval(TR.ecoRec.iv); TR.ecoRec = null; } };
@@ -636,7 +861,7 @@ function ecoMsgHTML(m, i, arr) {
   return `<p class="eco-bot" data-bot="${i}">${esc(streaming ? TR.ecoStream.visible : m.texto)}${streaming ? '<span class="eco-dot"></span>' : ''}</p>${!streaming && ultimo ? `<div class="eco-acts"><span>${I.speaker}</span><span>${I.copy}</span></div>` : ''}`;
 }
 function ecoLista() {
-  const list = document.querySelector('[data-elist]');
+  const list = $('[data-elist]');
   if (!list) return;
   if (!S.eco.msgs.length) {
     list.innerHTML = '<div class="eco-empty"><span class="h">¿De qué querés hablar?</span></div>';
@@ -646,7 +871,7 @@ function ecoLista() {
   list.scrollTop = list.scrollHeight;
 }
 function ecoComposer(grabando) {
-  const c = document.querySelector('[data-ecomp]');
+  const c = $('[data-ecomp]');
   if (!c) return;
   if (!grabando) {
     c.innerHTML = `<span class="ph">Preguntale a Eco</span>
@@ -664,9 +889,9 @@ function ecoGrabar() {
   if (TR.ecoStream) return;
   ecoComposer(true);
   const t0 = Date.now();
-  const wave = document.querySelector('[data-ewave]');
+  const wave = $('[data-ewave]');
   TR.ecoRec = { iv: setInterval(() => {
-    const t = document.querySelector('[data-et]');
+    const t = $('[data-et]');
     if (t) t.textContent = fmtDur((Date.now() - t0) / 1000);
     const i = document.createElement('i');
     i.style.height = (4 + Math.random() * 24) + 'px';
@@ -698,9 +923,9 @@ function ecoResponder(ev) {
     if (!st) return clearInterval(iv);
     st.k++;
     st.visible = palabras.slice(0, st.k).join(' ');
-    const p = document.querySelector(`[data-bot="${S.eco.msgs.length - 1}"]`);
+    const p = $(`[data-bot="${S.eco.msgs.length - 1}"]`);
     if (p) p.innerHTML = esc(st.visible) + '<span class="eco-dot"></span>';
-    const list = document.querySelector('[data-elist]');
+    const list = $('[data-elist]');
     if (list) list.scrollTop = list.scrollHeight;
     if (st.k >= palabras.length) { clearInterval(iv); TR.ecoStream = null; ecoLista(); refrescarMenu(); }
   }, paso);
@@ -726,25 +951,26 @@ export function iniciarLlamada(desdeMenu = true) {
   if (desdeMenu) TR.call.sonadas = 0;
   TR.call.conectada = false;
   document.getElementById('banner-layer').innerHTML = '';
-  go('llamada');
+  go('llamada', 'fade');
 }
 function scrLlamada(el) {
   el.classList.add('call');
   const nombre = S.tg.agendado ? (S.tg.nombre || G.llamada.nombre) : G.contacto.numero;
+  const fondo = `<div class="call-bgimg" style="background-image:url('${perfilSrc()}')"></div>`;
   if (TR.call.conectada) {
-    el.innerHTML = `${M.perfilJulian ? `<div class="call-bgimg" style="background-image:url('${M.perfilJulian}')"></div>` : ''}<div class="safe-top"></div>
+    el.innerHTML = `${fondo}<div class="safe-top"></div>
       <div class="call-top">${avatarHTML(96, 'margin-bottom:16px')}<span class="call-name">${esc(nombre)}</span><span class="call-sub" data-calltime>0:00</span></div>
       <div class="call-btns" style="justify-content:center"><button class="call-btn no" data-end><span class="c">${sized(I.phoneDown, 48)}</span>Finalizar</button></div>`;
-    el.querySelector('[data-end]').onclick = () => { TR.call.conectada = false; go(TR.call.volverA || 'talkgram'); };
+    el.querySelector('[data-end]').onclick = () => { TR.call.conectada = false; go(TR.call.volverA || 'talkgram', 'fade'); };
     return;
   }
-  el.innerHTML = `${M.perfilJulian ? `<div class="call-bgimg" style="background-image:url('${M.perfilJulian}')"></div>` : ''}<div class="safe-top"></div>
+  el.innerHTML = `${fondo}<div class="safe-top"></div>
     <div class="call-top">${avatarHTML(96, 'margin-bottom:16px')}<span class="call-name">${esc(nombre)}</span><span class="call-sub">${esc(G.llamada.subtitulo)}</span></div>
     <div class="call-small"><div><span class="c">${I.alarm}</span>Recordarme</div><div><span class="c">${I.bubble}</span>Mensaje</div></div>
-    <div class="call-btns" style="margin-top:0"><button class="call-btn no" data-no><span class="c">${sized(I.phoneDown, 48)}</span>Rechazar</button><button class="call-btn yes" data-yes><span class="c">${sized(I.phoneFill, 44)}</span>Aceptar</button></div>`;
+    <div class="call-btns" style="margin-top:0"><button class="call-btn no" data-no><span class="c">${sized(I.phoneDown, 48)}</span>Rechazar</button><button class="call-btn yes" data-yes><span class="c ringing">${sized(I.phoneFill, 44)}</span>Aceptar</button></div>`;
   el.querySelector('[data-no]').onclick = () => {
     TR.call.sonadas++;
-    go(TR.call.volverA || 'talkgram');
+    go(TR.call.volverA || 'talkgram', 'fade');
     if (A.reSonar > 0 && TR.call.sonadas <= A.reSonarVeces) TR.call.reT = setTimeout(() => iniciarLlamada(false), A.reSonar * 1000);
   };
   el.querySelector('[data-yes]').onclick = () => { TR.call.conectada = true; TR.call.inicio = Date.now(); render(); };
@@ -753,13 +979,10 @@ function scrLlamada(el) {
 const SCREENS = { bloqueo: scrBloqueo, inicio: scrInicio, bristagram: scrBristagram, talkgram: scrTalkGram, eco: scrEco, llamada: scrLlamada };
 
 // ---------- Gestos ----------
-function swipeUp(el, fn, fraccion) {
+function swipeUp(el, fn) {
   let y0 = null;
-  const down = (e) => { y0 = e.clientY; };
-  const up = (e) => { if (y0 !== null && y0 - e.clientY > window.innerHeight * fraccion * 0.4) fn(); y0 = null; };
-  el.addEventListener('pointerdown', down);
-  el.addEventListener('pointerup', up);
-  return null;
+  el.addEventListener('pointerdown', (e) => { y0 = e.clientY; });
+  el.addEventListener('pointerup', (e) => { if (y0 !== null && y0 - e.clientY > window.innerHeight * 0.18) fn(); y0 = null; });
 }
 // Toques invisibles (no bloquean los botones de debajo):
 // · mantener 0,7 s en la esquina superior izquierda → menú oculto
@@ -771,7 +994,7 @@ function initToques() {
   let ultimoToque = 0;
   let yBottom = null;
   const topSeguro = () => {
-    const p = document.querySelector('.safe-top');
+    const p = $('.safe-top');
     return p ? p.getBoundingClientRect().bottom : 0;
   };
   document.addEventListener('pointerdown', (e) => {
@@ -781,7 +1004,7 @@ function initToques() {
     if (enFranja && e.clientX < Z) {
       lp = setTimeout(() => { suprimir = true; abrirMenu(); }, 700);
     }
-    if (enFranja && e.clientX > window.innerWidth - Z && S.screen !== 'bristagram') {
+    if (enFranja && e.clientX > window.innerWidth - Z && !TR.story) {
       const t = Date.now();
       if (t - ultimoToque < 400) { ultimoToque = 0; siguiente(); } else ultimoToque = t;
     }
@@ -789,7 +1012,7 @@ function initToques() {
   }, true);
   const fin = (e) => {
     clearTimeout(lp);
-    if (yBottom !== null && e.type === 'pointerup' && yBottom - e.clientY > 80 && S.screen !== 'llamada' && S.screen !== 'bloqueo') go('inicio');
+    if (yBottom !== null && e.type === 'pointerup' && yBottom - e.clientY > 80 && !['llamada', 'bloqueo', 'inicio'].includes(S.screen) && !TR.story) go('inicio', 'close');
     yBottom = null;
   };
   document.addEventListener('pointerup', fin, true);
@@ -807,7 +1030,7 @@ function initViewport() {
     document.documentElement.style.setProperty('--app-h', h + 'px');
     const teclado = vv && window.innerHeight - vv.height > 120;
     document.body.classList.toggle('kb', !!teclado);
-    const b = document.querySelector('[data-bottom]');
+    const b = $('[data-bottom]');
     if (b) b.classList.toggle('kb-closed', !teclado);
     window.scrollTo(0, 0);
     scrollAbajo();

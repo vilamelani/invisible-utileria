@@ -2,7 +2,7 @@
 // Se abre manteniendo apretada 0,7 s la esquina superior izquierda.
 import {
   S, A, getG, setGuion, borrarGuionEditado, go, render, save, saveAjustes, planos, cargarPlano,
-  siguiente, deshacer, reiniciarTodo, reiniciarEco, ecoSiguiente, iniciarLlamada, estadoTexto, hhmm, ahora
+  siguiente, deshacer, reiniciarTodo, reiniciarEco, ecoSiguiente, iniciarLlamada, estadoTexto, hhmm, ahora, LS_BARRA
 } from './app.js';
 import { M, MEDIOS, guardarMedio, borrarMedio, esVideo } from './media.js';
 
@@ -60,7 +60,29 @@ function pintar() {
       <div class="row"><label><input type="checkbox" data-chk="tipeo" ${A.tipeo ? 'checked' : ''}> Mostrar "escribiendo…" antes de cada mensaje</label></div>
       <div class="row"><label>Respuesta a Martina (s) <input type="number" step="0.5" min="0" data-num="espera" value="${A.espera}"></label><label>Entre mensajes (s) <input type="number" step="0.5" min="0" data-num="esperaSeguido" value="${A.esperaSeguido}"></label></div>
       <div class="row"><label>Letras por tecla <input type="number" step="1" min="1" data-num="letras" value="${A.letras}"></label></div>
+      <p class="note">Todo mensaje de Martina se puede escribir o mandar como audio, sin importar cómo figure en el guion. Esto define cómo aparecen los audios del guion cuando los fuerza el equipo (Siguiente evento) o al cargar un plano:</p>
+      <div class="row">
+        <button class="btn ${A.audiosComo === 'audio' ? 'on' : ''}" data-set="audiosComo" data-val="audio">Audios como audio</button>
+        <button class="btn ${A.audiosComo === 'texto' ? 'on' : ''}" data-set="audiosComo" data-val="texto">Audios como texto</button>
+      </div>
       <div class="row">${S.tg.agendado ? b('desagendar', 'Quitar contacto agendado') : b('agendar', 'Agendar contacto ahora')}${b('borrar-notifs', 'Borrar notificaciones del bloqueo')}</div>
+    </section>
+
+    <section>
+      <h3>Pantalla de bloqueo</h3>
+      <div class="row"><label><input type="checkbox" data-chk="bloqueoAuto" ${A.bloqueoAuto ? 'checked' : ''}> Las notificaciones entran solas</label></div>
+      <div class="row"><label>Primera notificación a los (s) <input type="number" step="0.5" min="0" data-num="bloqueoEspera" value="${A.bloqueoEspera}"></label></div>
+      <p class="note">Empieza a contar cuando se muestra el bloqueo. Para el plano 1.C/5: cargá ese plano y cerrá el menú; la cuenta arranca al cerrarlo.</p>
+    </section>
+
+    <section>
+      <h3>Barra de estado (arriba de todo)</h3>
+      <div class="row">
+        <button class="btn ${barra() === 'default' ? 'on' : ''}" data-barra="default">Texto oscuro</button>
+        <button class="btn ${barra() === 'black-translucent' ? 'on' : ''}" data-barra="black-translucent">Texto blanco</button>
+        <button class="btn ${barra() === 'auto' ? 'on' : ''}" data-barra="auto">Automático (prueba)</button>
+      </div>
+      <p class="note">Texto oscuro: la barra toma el color de cada pantalla (bien para TalkGram y Eco). Texto blanco: la app pasa por debajo de la barra (bien para bloqueo, Inicio, historias y llamada). Automático: intenta cambiar según la pantalla; puede no funcionar en todos los iOS. Después de cambiarlo, cerrá la app desde el selector de apps y volvé a abrirla.</p>
     </section>
 
     <section>
@@ -99,15 +121,24 @@ function pintar() {
   </div>`;
 }
 
+function barra() {
+  try { return localStorage.getItem(LS_BARRA) || 'default'; } catch (e) { return 'default'; }
+}
+
 async function onClick(ev) {
-  const t = ev.target.closest('[data-act],[data-go],[data-set],[data-del]');
+  const t = ev.target.closest('[data-act],[data-go],[data-set],[data-del],[data-barra]');
   if (!t) return;
+  if (t.dataset.barra) {
+    localStorage.setItem(LS_BARRA, t.dataset.barra);
+    location.reload();
+    return;
+  }
   if (t.dataset.go) { cerrar(); go(t.dataset.go); return; }
   if (t.dataset.set) { A[t.dataset.set] = t.dataset.val; saveAjustes(); pintar(); return; }
   if (t.dataset.del) { await borrarMedio(t.dataset.del); pintar(); return; }
   const G = getG();
   switch (t.dataset.act) {
-    case 'cerrar': cerrar(); render(); break;
+    case 'cerrar': cerrar(); if (S.screen !== 'bristagram') render(); break;
     case 'cargar-plano': cargarPlano(+layer().querySelector('[data-plano]').value); cerrar(); break;
     case 'siguiente': cerrar(); siguiente(); break;
     case 'deshacer': deshacer(); break;

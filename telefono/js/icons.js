@@ -63,6 +63,21 @@ export const I = {
 I.alarm = s(22, 22, '0 0 22 22', '<circle cx="11" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M11 8v4l2.5 2M3 4.5L6 2M19 4.5L16 2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>');
 I.bubble = s(22, 22, '0 0 60 60', `<path d="${BUBBLE}" fill="currentColor"/>`);
 
+// Bristagram (feed)
+const st = (d, w = 1.9) => `<path d="${d}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+I.bgHome = s(26, 26, '0 0 24 24', '<path d="M3.5 10.2L12 3l8.5 7.2V20a1 1 0 0 1-1 1H15v-6h-6v6H4.5a1 1 0 0 1-1-1z" fill="currentColor"/>');
+I.bgSearch = s(26, 26, '0 0 24 24', '<circle cx="10.5" cy="10.5" r="7" fill="none" stroke="currentColor" stroke-width="2"/>' + st('M15.8 15.8L21 21', 2));
+I.bgAdd = s(26, 26, '0 0 24 24', '<rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.9"/>' + st('M12 7.5v9M7.5 12h9'));
+I.bgReels = s(26, 26, '0 0 24 24', '<rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.9"/>' + st('M3.5 8.5h17M9 3.5l3 5M14.5 3.5l3 5') + '<path d="M10 11.5v5l4.3-2.5z" fill="currentColor"/>');
+I.bgHeart = s(26, 26, '0 0 24 24', st('M12 20.3s-8-4.9-8-10.6A4.6 4.6 0 0 1 12 6.9a4.6 4.6 0 0 1 8 2.8c0 5.7-8 10.6-8 10.6z'));
+I.bgHeartFill = s(26, 26, '0 0 24 24', '<path d="M12 20.3s-8-4.9-8-10.6A4.6 4.6 0 0 1 12 6.9a4.6 4.6 0 0 1 8 2.8c0 5.7-8 10.6-8 10.6z" fill="#FF3040"/>');
+I.bgComment = s(26, 26, '0 0 24 24', st('M20.5 11.6a8.5 8.5 0 0 1-12.6 7.4L3.5 20.5l1.5-4.3A8.5 8.5 0 1 1 20.5 11.6z'));
+I.bgSend = s(26, 26, '0 0 24 24', st('M21.5 2.5L2.5 9.8l7.6 3 3 7.7zM10.1 12.8L21.5 2.5'));
+I.bgSave = s(26, 26, '0 0 24 24', st('M6 3.5h12v17.5l-6-4.6-6 4.6z'));
+I.bgDM = s(26, 26, '0 0 24 24', st('M12 3a9 8.5 0 0 0-7.7 12.9L3 21l5.2-1.3A9 8.5 0 1 0 12 3z') + st('M7 13.8l3.4-3.6 2.6 2.3 4-3.7', 1.7));
+I.bgPlus = s(14, 14, '0 0 14 14', '<path d="M7 2.5v9M2.5 7h9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>');
+I.bgChevron = s(14, 14, '0 0 14 14', st('M3.5 5.5L7 9l3.5-3.5', 2));
+
 // Cambia el tamaño de un ícono ya armado
 export const sized = (svg, n) => svg.replace(/width="[\d.]+" height="[\d.]+"/, `width="${n}" height="${n}"`);
 

@@ -1,6 +1,6 @@
 # INVISIBLE: decisiones de utilería digital
 
-Versión 0.4, 2026-11-10. Dirección visual del iPhone elegida (B). App del teléfono v1 construida, falta probarla en el iPhone.
+Versión 0.5, 2026-11-10. App del teléfono v2 con correcciones de la primera prueba en iPhone (15 Pro).
 
 **Convenciones**
 - `[DECIDIDO]`: lo cerraste vos.
@@ -247,6 +247,33 @@ Código en `invisible-utileria/telefono/` (ver su README). Web app estática, of
   - Fecha del bloqueo: "domingo, 1 de noviembre".
 - `[ABIERTA]` m28 "¿Qué? ¡Los amo!…": el guion no dice si es texto o audio. Quedó como texto.
 
-## 11. Próximo paso
+## 11. Correcciones tras la primera prueba en iPhone (v2, 2026-11-10)
+
+- `[DECIDIDO]` **Bristagram** abre en un **feed** con publicaciones y la fila de historias arriba. Las historias se abren tocando el círculo de julianm.
+  - Hay historias de **varias personas**, no solo de Julián.
+  - Se navega tocando a los costados y deslizando entre personas. Deslizar hacia abajo cierra.
+- `[INVENTADO]` Contenido de Bristagram, todo reemplazable desde el menú oculto:
+  - Usuarios: `agustinaa.m` (Agustina), `cami.rossi`, `tomi.benitez`, `flor.dalessio`, `lu.paz`.
+  - Textos de historias: "la mejor noche 🖤", "gracias a todos por venir 🎃", "alguien sabe si mañana hay clase?", "volver a casa así", "no me hablen hasta el lunes".
+  - Publicaciones: "la terraza a esta hora 🧡", "previa".
+  - Cantidad de "me gusta" y ubicación "Buenos Aires, Argentina".
+  - Imágenes predeterminadas abstractas (luces desenfocadas, atardecer) y nombre de la marca en letra manuscrita.
+- `[DECIDIDO]` **Notificaciones del bloqueo** con temporizador: entran solas a los 5 s de mostrarse el bloqueo (configurable) y aparecen con animación.
+- `[PROPUESTA]` Transiciones tipo iOS:
+  - Abrir una app: zoom desde el ícono.
+  - Volver a Inicio: la app se achica.
+  - Desbloquear: el bloqueo sube.
+  - Llamada: aparece con fundido.
+- `[DECIDIDO]` **TalkGram**:
+  - Tocar la miniatura abre la **foto de perfil**. Tocar el número abre "Nuevo contacto".
+  - Burbuja con **tres puntitos** mientras Julián escribe, además de "escribiendo…" arriba.
+  - **Todo mensaje de Martina se puede mandar como texto o como audio**, sin importar cómo figure en el guion. En modo Completar, al escribir aparece el texto del guion.
+  - En el menú: "Audios como audio / como texto", que define cómo se ven los audios al forzarlos o al cargar un plano.
+- `[DECIDIDO]` **Llamada**: el botón Aceptar "vibra" (se sacude y tiene ondas que se expanden).
+- **Barra de estado negra**: era el fondo negro de la página, que iOS usa para pintar la barra. Ahora la página toma el color de cada pantalla.
+  - `[PROPUESTA]` Tres modos en el menú: texto oscuro, texto blanco o automático (experimental). El texto de la barra no cambia de color solo en todos los iOS. **Hay que probar cuál queda mejor en el iPhone.**
+- `[PROPUESTA]` Con conexión, la app siempre baja la última versión. Sin conexión (modo avión) usa la guardada.
+
+## 12. Próximo paso
 
 Probar la app en el iPhone 14 (lista de lo no verificable en el README). Después, direcciones visuales de la Mac.

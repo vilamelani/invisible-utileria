@@ -7,9 +7,15 @@ export const T = {}; // clave -> tipo MIME
 
 export const MEDIOS = [
   { key: 'perfilJulian', label: 'Foto de perfil de Julián (TalkGram y Bristagram)', accept: 'image/*' },
-  { key: 'historia1', label: 'Historia 1 de Bristagram (foto o video)', accept: 'image/*,video/*' },
-  { key: 'historia2', label: 'Historia 2 de Bristagram', accept: 'image/*,video/*' },
-  { key: 'historia3', label: 'Historia 3 de Bristagram', accept: 'image/*,video/*' },
+  { key: 'historia1', label: 'Historia 1 de Julián (fiesta, foto o video)', accept: 'image/*,video/*' },
+  { key: 'historia2', label: 'Historia 2 de Julián (con Agustina)', accept: 'image/*,video/*' },
+  { key: 'historia3', label: 'Historia 3 de Julián', accept: 'image/*,video/*' },
+  { key: 'historiaAgustina', label: 'Historia de Agustina', accept: 'image/*,video/*' },
+  { key: 'historiaTomi', label: 'Historia de tomi.benitez', accept: 'image/*,video/*' },
+  { key: 'historiaFlor', label: 'Historia de flor.dalessio', accept: 'image/*,video/*' },
+  { key: 'post1', label: 'Publicación 1 del feed', accept: 'image/*' },
+  { key: 'post2', label: 'Publicación 2 del feed', accept: 'image/*' },
+  { key: 'avatarMartina', label: 'Foto de perfil de Martina (Bristagram)', accept: 'image/*' },
   { key: 'corona', label: 'Foto de la corona (1.C/11)', accept: 'image/*' },
   { key: 'emily', label: 'Foto de Martina de Emily (1.E/5)', accept: 'image/*' },
   { key: 'selfie', label: 'Selfie de Martina (1.F/3), si no se saca en vivo', accept: 'image/*' },
@@ -73,4 +79,13 @@ export async function cargarMedios() {
 
 export function esVideo(key) {
   return (T[key] || '').startsWith('video/');
+}
+
+// { media: 'clave', default: 'ruta' } -> src cargado o predeterminado
+export function src(o) {
+  if (!o) return '';
+  return (o.media && M[o.media]) || o.default || '';
+}
+export function srcEsVideo(o) {
+  return !!(o && o.media && M[o.media] && esVideo(o.media));
 }

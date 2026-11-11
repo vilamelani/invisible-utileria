@@ -48,6 +48,16 @@ python3 -m http.server 8000
 3. Abrí siempre desde ese ícono, nunca desde Safari: así se ve a pantalla completa, sin barra de navegador.
 4. Desde ese momento funciona sin conexión.
 
+### Barra de estado
+
+La barra de arriba (hora, señal, batería) es la del iPhone y no se puede ocultar. En el menú oculto, sección Barra de estado, hay tres modos:
+
+- **Texto oscuro**: la barra toma el color de la pantalla. Va bien en TalkGram, Eco y el feed.
+- **Texto blanco**: la app se dibuja por debajo de la barra. Va bien en el bloqueo, Inicio, las historias y la llamada.
+- **Automático (prueba)**: intenta cambiar de modo según la pantalla.
+
+iOS lee este ajuste al abrir la app. Después de cambiarlo, cerrá la app desde el selector de apps y volvé a abrirla.
+
 ### Antes de cada jornada
 
 - **Acceso guiado** (Ajustes › Accesibilidad › Acceso guiado). Activalo con triple clic en el botón lateral. Así la actriz no puede salir de la app con el gesto de inicio.
@@ -62,7 +72,8 @@ python3 -m http.server 8000
 |---|---|
 | Menú oculto | Mantener apretada ~0,7 s la esquina **superior izquierda** |
 | Toque invisible (siguiente evento) | **Doble toque** en la esquina **superior derecha**. En TalkGram hace entrar el próximo mensaje de Julián. En Eco hace avanzar Eco. |
-| Desbloquear | Deslizar hacia arriba en la pantalla de bloqueo |
+| Notificaciones del bloqueo | Entran solas a los 5 s de mostrarse el bloqueo. Se configura en el menú, sección Pantalla de bloqueo. |
+| Desbloquear | Deslizar hacia arriba, o tocar una notificación (abre TalkGram) |
 | Volver a Inicio | Deslizar hacia arriba desde el borde inferior. Si el Acceso guiado no lo deja, usar el botón ‹ de TalkGram o el menú. |
 
 Los toques invisibles no bloquean los botones que hay debajo.
@@ -77,7 +88,7 @@ Los toques invisibles no bloquean los botones que hay debajo.
 - **Eco**: siguiente, reiniciar y velocidad del texto.
 - **Llamada**: dispararla, cuántas veces vuelve a sonar tras rechazarla y a los cuántos segundos.
 - **Fotos y videos**:
-  - perfil de Julián, historias 1 a 3, corona, Emily;
+  - perfil de Julián, historias 1 a 3 de Julián, historias de otras personas, publicaciones del feed, perfil de Martina, corona, Emily;
   - selfie (si no se saca en vivo);
   - fondo de pantalla y foto del widget.
 - **Hora de ficción**: para la pantalla de bloqueo y los horarios del chat.
@@ -86,12 +97,17 @@ Los toques invisibles no bloquean los botones que hay debajo.
 ### Qué hace la actriz en cada app
 
 - **TalkGram**:
-  - Escribe y envía con el teclado real.
+  - Escribe y envía con el teclado real. **Cualquier mensaje de Martina se puede escribir o mandar como audio**, aunque el guion diga otra cosa. En modo Completar, al escribir aparece el texto del guion.
+  - Tocando la foto de Julián (arriba) se abre su foto de perfil.
   - Para los audios, toca el micrófono para grabar y la flecha para enviar. El tacho cancela, que es el audio interrumpido de 1.F/4.
   - La cámara abre la cámara real del iPhone, para la selfie de 1.F/3, y la manda.
-  - Tocando el nombre (o "Agregar") se agenda el contacto. En modo Completar aparece "Julián" letra por letra.
+  - Tocando el número (o "Agregar") se agenda el contacto. En modo Completar aparece "Julián" letra por letra.
 - **Eco**: toca el micrófono, habla y toca la flecha. Aparece la transcripción del guion y Eco responde palabra por palabra.
-- **Bristagram**: desde Inicio. Las historias avanzan solas. Tocar a los costados cambia de historia.
+- **Bristagram**: desde Inicio se abre el feed. Tocando el círculo de julianm se abren las historias.
+  - Pasan solas y siguen con las de las otras personas.
+  - Tocar a la derecha o a la izquierda pasa a la historia siguiente o anterior.
+  - Deslizar al costado cambia de persona y deslizar hacia abajo cierra.
+  - Mantener apretado pausa.
 
 ## Editar textos
 
@@ -112,7 +128,7 @@ Por mensaje:
 
 ## Lo que NO se pudo verificar fuera del iPhone
 
-- Si la barra de estado real toma el color de cada pantalla (`theme-color`). Si no lo toma, probar `black-translucent` en `index.html`.
+- Cuál de los tres modos de barra de estado queda mejor, y si el Automático cambia de verdad.
 - El teclado real en modo Completar: autocorrección, barra predictiva y salto del texto al abrirse el teclado.
 - Si la cámara (`capture="user"`) abre directo la cámara frontal.
 - Si el gesto de "deslizar desde abajo" convive con el gesto del sistema con Acceso guiado.

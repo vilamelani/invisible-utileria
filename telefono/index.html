@@ -5,9 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<!-- "default": la barra de estado real queda arriba de la app y toma el theme-color de cada pantalla.
-     Si en el iPhone no toma el color, probar "black-translucent" (la app pasa por debajo de la barra). -->
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<!-- Estilo de la barra de estado real del iPhone. Se elige en el menú oculto (Barra de estado):
+     "default" = texto oscuro, la barra toma el color de fondo de cada pantalla.
+     "black-translucent" = texto blanco, la app se dibuja por debajo de la barra.
+     "auto" = arranca en "default" y prueba cambiar por pantalla (experimental).
+     iOS lee este valor al abrir la app: después de cambiarlo hay que cerrar y volver a abrir la app. -->
+<script>
+(function () {
+  var m = 'default';
+  try { m = localStorage.getItem('invisible-barra') || 'default'; } catch (e) {}
+  document.write('<meta name="apple-mobile-web-app-status-bar-style" content="' + (m === 'auto' ? 'default' : m) + '">');
+})();
+</script>
 <meta name="apple-mobile-web-app-title" content="Invisible">
 <meta name="theme-color" content="#4A6AA8">
 <meta name="format-detection" content="telephone=no">
