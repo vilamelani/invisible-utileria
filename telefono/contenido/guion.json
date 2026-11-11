@@ -1,0 +1,78 @@
+{
+  "_nota": "Textos literales del guion. Editable sin tocar código. 'espera' = segundos antes de que entre el mensaje (si no está, se usa la espera general del menú). 'manual': true = solo entra con el toque invisible o el botón Siguiente.",
+  "contacto": {
+    "numero": "+54 9 11 1103-1976",
+    "nombreAgendado": "Julián",
+    "estado": "en línea"
+  },
+  "bloqueo": {
+    "fecha": "domingo, 1 de noviembre"
+  },
+  "inicio": {
+    "ciudad": "Buenos Aires",
+    "temperatura": "14°",
+    "clima": "Despejado",
+    "maxmin": "Máx.: 19° Mín.: 11°",
+    "tituloFoto": "Hace un año"
+  },
+  "bristagram": {
+    "usuario": "julianm",
+    "hace": "2 h",
+    "segundosPorHistoria": 6
+  },
+  "llamada": {
+    "nombre": "Julián",
+    "subtitulo": "Llamada de audio de TalkGram"
+  },
+  "talkgram": [
+    { "id": "m1",  "de": "julian",  "tipo": "texto", "texto": "Hola, estas?", "plano": "1.C/5 · primeros mensajes (bloqueo)", "manual": true },
+    { "id": "m2",  "de": "julian",  "tipo": "texto", "texto": "estas bien?", "espera": 2 },
+    { "id": "m3",  "de": "martina", "tipo": "texto", "texto": "¿Quién sos?", "plano": "1.C/7 · ¿Quién sos?" },
+    { "id": "m4",  "de": "julian",  "tipo": "texto", "texto": "Julián." },
+    { "id": "m5",  "de": "julian",  "tipo": "texto", "texto": "Vi que te fuiste y le pedí el número a tu amiga.", "plano": "1.C/9 · Vi que te fuiste" },
+    { "id": "m6",  "de": "martina", "tipo": "texto", "texto": "¿Agustina? Pensé que estabas con ella. Como no nos vimos en toda la noche..." },
+    { "id": "m7",  "de": "julian",  "tipo": "texto", "texto": "¿Cómo que no? Tenías un vestido blanco, una corona y un ramo de flores." },
+    { "id": "m8",  "de": "julian",  "tipo": "foto", "media": "corona", "plano": "1.C/11 · foto de la corona" },
+    { "id": "m9",  "de": "julian",  "tipo": "texto", "texto": "Te la olvidaste" },
+    { "id": "m10", "de": "martina", "tipo": "audio", "duracion": 4, "texto": "¿Vos estás loco? ¿Cómo le vas a hablar a mi hermana?", "plano": "1.E/1 · ¿Vos estás loco?" },
+    { "id": "m11", "de": "julian",  "tipo": "texto", "texto": "Perdón, te vi muy mal y me re preocupé." },
+    { "id": "m12", "de": "martina", "tipo": "audio", "duracion": 4, "texto": "Pero no entiendo… ¿Por qué nunca me hablaste antes?" },
+    { "id": "m13", "de": "julian",  "tipo": "texto", "texto": "Vergüenza. Me hubiese gustado que te quedaras.", "plano": "1.E/2 · Vergüenza" },
+    { "id": "m14", "de": "martina", "tipo": "texto", "texto": "¿Sí? ¿Y Agustina?" },
+    { "id": "m15", "de": "julian",  "tipo": "texto", "texto": "Agustina no para de hablar de ella. Se hace la interesante, pero es un embole. En cambio vos… buen disfraz, Carrie, ¿no?" },
+    { "id": "m16", "de": "martina", "tipo": "texto", "texto": "¡Ay! ¿Viste cómo es? La quiero, pero a veces es… no sé", "plano": "1.E/3 · ¿Viste cómo es?" },
+    { "id": "m17", "de": "julian",  "tipo": "texto", "texto": "Insoportable" },
+    { "id": "m18", "de": "martina", "tipo": "texto", "texto": "Lo dijiste vos, no yo." },
+    { "id": "m19", "de": "martina", "tipo": "audio", "duracion": 3, "texto": "¿Te gustó? No sé si alguien se dio cuenta", "plano": "1.E/4 · ¿Te gustó?" },
+    { "id": "m20", "de": "julian",  "tipo": "texto", "texto": "Compite con el del año pasado", "plano": "1.E/5 · foto de Emily" },
+    { "id": "m21", "de": "julian",  "tipo": "foto", "media": "emily" },
+    { "id": "m22", "de": "martina", "tipo": "audio", "duracion": 4, "texto": "¿Qué haces con esto? Ay no, estaba horrible encima" },
+    { "id": "m23", "de": "julian",  "tipo": "texto", "texto": "A mí me gusta. Horrible es que no estés acá.", "plano": "1.E/7 · A mí me gusta" },
+    { "id": "m24", "de": "martina", "tipo": "texto", "texto": "¿Si? ¿Qué más te gusta? ¿Cómo es eso de pasarme a buscar?" },
+    { "id": "m25a","de": "julian",  "tipo": "escribiendo", "duracion": 2.5, "plano": "1.E/8 · escribe y borra, agendar" },
+    { "id": "m25b","de": "julian",  "tipo": "escribiendo", "duracion": 3, "espera": 1.5 },
+    { "id": "m25", "de": "julian",  "tipo": "texto", "texto": "Y… muchas cosas. Pero bueno, tendría que contártelas personalmente", "espera": 1.5 },
+    { "id": "m26", "de": "martina", "tipo": "texto", "texto": "¿y no podés adelantarme algo?", "plano": "1.F/1 · ¿no podés adelantarme algo?", "yaAgendado": true },
+    { "id": "m27", "de": "julian",  "tipo": "audio", "duracion": 32 },
+    { "id": "m28", "de": "martina", "tipo": "texto", "texto": "¿Qué? ¡Los amo! Te juro que recién los estaba escuchando" },
+    { "id": "m29", "de": "julian",  "tipo": "texto", "texto": "Nos gusta la misma música, las mismas pelis. Me gusta que tengamos tanto en común… ¿no?", "plano": "1.F/2 · Nos gusta la misma música" },
+    { "id": "m30", "de": "martina", "tipo": "texto", "texto": "¿Sí? Y… ¿así te gustaría verme?" },
+    { "id": "m31", "de": "martina", "tipo": "foto", "media": "selfie", "plano": "1.F/3 · selfie" },
+    { "id": "m32", "de": "julian",  "tipo": "texto", "texto": "Wow sos hermosa. Me encantás <3" },
+    { "id": "m33", "de": "martina", "tipo": "audio-cancelado", "texto": "A mi también me encan…", "plano": "1.F/4 · audio interrumpido" },
+    { "id": "m34", "de": "julian",  "tipo": "texto", "texto": "Buena compra hiciste, te queda muy linda esa luz", "espera": 1 },
+    { "id": "m35", "de": "martina", "tipo": "texto", "texto": "¿De qué hablas?", "plano": "1.F/5 · ¿De qué hablas?" },
+    { "id": "m36", "de": "julian",  "tipo": "texto", "texto": "De la lámpara :) . La compraste el lunes ¿no?", "plano": "1.F/6 · la lámpara" },
+    { "id": "m37", "de": "julian",  "tipo": "texto", "texto": "Lo dijiste en clase" },
+    { "id": "m38", "de": "martina", "tipo": "texto", "texto": "¿En serio? perdón, ando con la cabeza a mil. Es...extraña, pero tiene algo, como si no pudiera dejar de verla. ¿Nunca te pasó algo así?", "plano": "1.F/7 · ¿En serio? perdón" },
+    { "id": "m39", "de": "julian",  "tipo": "texto", "texto": "Sii! me pasa con vos :)", "plano": "1.F/9 · Sii! me pasa con vos" },
+    { "id": "m40", "de": "martina", "tipo": "audio", "duracion": 4, "texto": "Para...vos me estas chamuyando, si no fuiste el lunes", "plano": "1.G/3 · Para... vos me estás chamuyando" },
+    { "id": "m41", "de": "julian",  "tipo": "texto", "texto": "Hasta durmiendo sos hermosa <3", "espera": 8, "plano": "1.G/6 · Hasta durmiendo sos hermosa" }
+  ],
+  "eco": [
+    { "id": "e1", "de": "martina", "duracion": 6, "texto": "Es una forra. Sabía que me gustaba Julian, ¿entendes? La odio. Me odio." },
+    { "id": "e2", "de": "eco", "texto": "Lo lamento mucho. Tenés derecho a estar enojada, pero no significa que haya algo malo en vos." },
+    { "id": "e3", "de": "martina", "duracion": 9, "texto": "No entendés. Se hizo la boluda como siempre. Estuve sola toda la noche. Estoy cansada de esto. Me siento horrible." },
+    { "id": "e4", "de": "eco", "texto": "Comprendo, Martu. Es una situación difícil. Sabes que a mucha gente le importás, no sos…" }
+  ]
+}
