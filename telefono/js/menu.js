@@ -97,6 +97,12 @@ function pintarMenu() {
         <button class="btn ${A.modo === 'completar' ? 'on' : ''}" data-set="modo" data-val="completar">Completar texto del guion</button>
         <button class="btn ${A.modo === 'libre' ? 'on' : ''}" data-set="modo" data-val="libre">Escritura libre</button>
       </div>
+      <div class="row">
+        <button class="btn ${A.teclado !== 'sistema' ? 'on' : ''}" data-set="teclado" data-val="simulado">Teclado simulado</button>
+        <button class="btn ${A.teclado === 'sistema' ? 'on' : ''}" data-set="teclado" data-val="sistema">Teclado del sistema</button>
+      </div>
+      <div class="row"><label><input type="checkbox" data-chk="predictivo" ${A.predictivo ? 'checked' : ''}> Barra de sugerencias en el teclado simulado</label></div>
+      <p class="note">El teclado simulado no muestra la barra ↑ ↓ ✓ de iOS. El del sistema tiene autocorrector y emojis reales.</p>
       <div class="row"><label><input type="checkbox" data-chk="auto" ${A.auto ? 'checked' : ''}> Respuestas de Julián con temporizador</label></div>
       <div class="row"><label><input type="checkbox" data-chk="tipeo" ${A.tipeo ? 'checked' : ''}> Mostrar "escribiendo…" antes de cada mensaje</label></div>
       <div class="row"><label>Respuesta a Martina (s) <input type="number" step="0.5" min="0" data-num="espera" value="${A.espera}"></label><label>Entre mensajes (s) <input type="number" step="0.5" min="0" data-num="esperaSeguido" value="${A.esperaSeguido}"></label></div>

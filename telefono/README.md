@@ -21,6 +21,7 @@ telefono/
   js/menu.js              menú oculto del equipo técnico
   js/media.js             fotos y videos guardados en el celular
   js/icons.js             íconos propios
+  js/teclado.js           teclado simulado de iOS
   contenido/guion.json    TODOS los textos (literales del guion)
   sw.js                   modo sin conexión
   manifest.webmanifest    instalación como app
@@ -94,8 +95,13 @@ Los toques invisibles no bloquean los botones que hay debajo.
 
 ### Qué hace la actriz en cada app
 
+- **Teclado**: por defecto es el **teclado simulado**, dibujado por la app con el estilo de iOS 26. No muestra la barra ↑ ↓ ✓ que iOS agrega a los campos de texto de una web.
+  - Se abre tocando el campo de texto y se cierra tocando el chat.
+  - Tiene barra de sugerencias. En modo Completar, las sugerencias son las palabras que siguen en el guion, y tocarlas las escribe.
+  - Mantener apretada una vocal escribe la vocal con tilde.
+  - No tiene autocorrector ni emojis reales. Si una toma los necesita, en el menú se cambia a **Teclado del sistema**.
 - **TalkGram**:
-  - Escribe y envía con el teclado real. **Cualquier mensaje de Martina se puede escribir o mandar como audio**, aunque el guion diga otra cosa. En modo Completar, al escribir aparece el texto del guion.
+  - Escribe y envía con el teclado. **Cualquier mensaje de Martina se puede escribir o mandar como audio**, aunque el guion diga otra cosa. En modo Completar, al escribir aparece el texto del guion.
   - Tocando la foto de Julián (arriba) se abre su foto de perfil.
   - Para los audios, toca el micrófono para grabar y la flecha para enviar. El tacho cancela, que es el audio interrumpido de 1.F/4.
   - La cámara abre la cámara real del iPhone, para la selfie de 1.F/3, y la manda.
@@ -127,7 +133,8 @@ Por mensaje:
 ## Lo que NO se pudo verificar fuera del iPhone
 
 - Cuál de los tres modos de barra de estado queda mejor, y si el Automático cambia de verdad.
-- El teclado real en modo Completar: autocorrección, barra predictiva y salto del texto al abrirse el teclado.
+- El teclado simulado en el iPhone: sensación al tipear, globo de la tecla y animación de entrada.
+- Con el teclado del sistema: si se cerró el hueco entre la barra de escribir y el teclado.
 - Si la cámara (`capture="user"`) abre directo la cámara frontal.
 - Si el gesto de "deslizar desde abajo" convive con el gesto del sistema con Acceso guiado.
 - Si los videos de las historias se reproducen solos.

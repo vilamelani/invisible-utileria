@@ -1,0 +1,24 @@
+{
+  "fechaBarra": "dom 1 nov",
+  "fechaLarga": "domingo, 1 de noviembre",
+  "musica": {
+    "cancion": "Cuarto creciente",
+    "artista": "Las Lunas de Abril",
+    "duracion": 228,
+    "posInicial": 72
+  },
+  "mail": {
+    "remitente": "Julián",
+    "direccion": "julian.m@correo.ar",
+    "para": "Martina",
+    "asunto": "Para vos",
+    "cuerpo": "Lo tenía guardado. Mirá :)",
+    "adjunto": "para_vos.mov",
+    "peso": "24,6 MB"
+  },
+  "bandeja": [
+    { "de": "Bristagram", "asunto": "Tenés notificaciones nuevas", "resumen": "cami.rossi y 4 personas más indicaron que les gusta tu publicación.", "cuando": "ayer" },
+    { "de": "Campus del cole", "asunto": "Nueva entrega publicada", "resumen": "Historia · Trabajo práctico 4 · vence el lunes", "cuando": "jueves" },
+    { "de": "Mamá", "asunto": "Fotos del cumple de la abuela", "resumen": "Te mando las que sacó tu tía. Hay una que te va a encantar.", "cuando": "martes" }
+  ]
+}

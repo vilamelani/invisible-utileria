@@ -291,30 +291,49 @@ Código en `invisible-utileria/telefono/` (ver su README). Web app estática, of
 
 - `[DECIDIDO]` Teléfono aprobado por Dirección (2026-11-10), salvo el teclado.
 
-## 12. Teclado del iPhone (pendiente)
+## 12. Teclado del iPhone
 
-- La barra ↑ ↓ ✓ arriba del teclado la agrega iOS a cualquier campo de texto de una web. No se puede quitar desde la app, ni se puede forzar la barra predictiva.
-- `[PROPUESTA]` Teclado simulado tipo iOS dibujado en la app, con barra predictiva falsa y sin teclado del sistema. Interruptor en el menú: "Teclado: simulado / del sistema".
-- Se arregla igual el hueco entre la barra de escribir y el teclado.
+- La barra ↑ ↓ ✓ arriba del teclado la agrega iOS a cualquier campo de texto de una web. No se puede quitar desde la app.
+- `[DECIDIDO]` **Teclado simulado** dibujado por la app, con el estilo de iOS 26 tomado de la captura del iPhone. Es el predeterminado.
+  - Interruptor en el menú: "Teclado simulado / Teclado del sistema".
+  - Tiene barra de sugerencias, que se puede apagar desde el menú.
+    - En modo Completar, sugiere las palabras que siguen en el guion y tocarlas las escribe.
+    - En modo Libre, con el campo vacío sugiere "Sí", "No" y "Jaja" `[INVENTADO]`.
+  - Se puede usar ñ, tildes (mantener apretada la vocal), números y símbolos. No tiene autocorrector ni emojis reales.
+  - También se usa en la hoja "Nuevo contacto".
+- `[DECIDIDO]` Con el teclado del sistema se corrigió el hueco entre la barra de escribir y el teclado. En iOS 26, la altura de la ventana también se achica con el teclado, y por eso no se detectaba.
 
-## 13. Mac: direcciones visuales (pendiente de elegir)
+## 13. Mac: dirección visual
 
-Canvas "Invisible — direcciones MacBook", a 1440 × 900:
+- `[DECIDIDO]` **Dirección A · Claro fiel**, con fondo de pantalla configurable desde el menú oculto. Mientras Arte no lo cargue, se usa un fondo propio.
+- `[PROPUESTA]` En la barra de menú, un círculo propio reemplaza al logo de Apple. Los nombres de las apps son genéricos: Correo, Música, Video, Navegador, Archivos.
+- `[INVENTADO]`, a confirmar (todo editable desde el menú):
+  - Canción "Cuarto creciente", de Las Lunas de Abril, 3:48, arranca en 1:12.
+  - Mail de Julián: asunto "Para vos", texto "Lo tenía guardado. Mirá :)", adjunto "para_vos.mov" (24,6 MB).
+  - Mails de relleno en la bandeja: Bristagram, Campus del cole, Mamá.
+  - Fecha "dom 1 nov" en la barra y "domingo, 1 de noviembre" en el mail.
+- La hora del mail es la hora del reloj (real o de ficción) en el momento en que llega, y queda fija.
 
-- **A · Claro fiel:** macOS claro, el más parecido a una Mac recién configurada. Es el que más ilumina la cara de Martina.
-- **B · Noche:** macOS oscuro, fondo azul noche. Ilumina menos y se integra con la lámpara de lava. Además empalma con ESC 3, que es oscuro.
-- **C · Su Mac:** escritorio personalizado (foto con amigas de fondo, archivos en el escritorio, playlist propia, acento rosa). Cuenta más del personaje.
-- **ESC 3:** igual para las tres. Navegador en ventana privada con la página de Eco (misma marca que en el celular), las 4 líneas literales y un cursor falso.
-- `[PROPUESTA]` En la barra de menú, un círculo propio reemplaza al logo de Apple. Los nombres de las apps son genéricos: Correo, Música, Navegador.
-- `[INVENTADO]`, a confirmar:
-  - Canción "Cuarto creciente", de Las Lunas de Abril.
-  - En C, la playlist "para llorar" y sus otros temas.
-  - Mail de Julián: asunto "Para vos", cuerpo "Lo tenía guardado. Mirá :)", adjunto "para_vos.mov" (24,6 MB).
-  - Otros mails de relleno: Bristagram, Campus del cole, Mamá.
-  - Hora 2:14 en 1.G y 2:31 en ESC 3.
-  - Dominio "eco.chat".
-- Para revisar: en el guion, "Enviando a Martina" va sin puntos suspensivos y "Cruzando historial de ubicación…" va con ellos. Se deja literal.
+## 14. Mac: comportamiento construido (v1)
 
-## 14. Próximo paso
+- Secuencia de la ESC 1: música sonando → Martina la pausa → llega el mail (aviso arriba a la derecha y globito en el ícono de Correo) → abre el mail → clic en el adjunto → el video tarda en cargar (8 s, configurable) → se reproduce el video cargado desde el menú.
+- La actriz hace todo con clics reales. El equipo puede avanzar con "Siguiente evento": doble clic sobre la hora, Ctrl+Opción+→ o el menú.
+- `[PROPUESTA]` El aviso del mail queda fijo hasta que Martina lo toca, para no depender del tiempo de la toma. Se puede hacer que se vaya solo.
+- `[PROPUESTA]` El mail llega con el toque del equipo. Opcional: que llegue solo a los X segundos de cargar el plano 1.G/2.
+- La miniatura del adjunto en el mail es oscura, para no adelantar lo que muestra el video.
+- Todo el estado se guarda, así que al cerrar y abrir la tapa la Mac queda igual.
 
-Elegir la dirección de la Mac y decidir el teclado. Después, construir la app de la Mac.
+## 15. ESC 3: Eco toma la Mac (pendiente de elegir dirección)
+
+- `[DECIDIDO]` La página de Eco tiene que referenciar algo "hacker": comandos de terminal que corren e interactúan solos. Además, se abre una miniatura de la webcam grabando en vivo.
+- Tres direcciones en el canvas: 1 · Consola dentro de Eco, 2 · Terminales que se abren solas, 3 · Pantalla tomada.
+- Las 4 líneas literales del guion aparecen en las tres.
+- `[INVENTADO]` Los comandos (`conectar`, `enviar`, `cruzar --historial ubicacion`, `camara --abrir --en-vivo`…) y los datos del historial de ubicación (horarios casa/fiesta/casa).
+- Técnica: la webcam en vivo funciona en Safari de la Mac (la página está en https). Hay que dar permiso a la cámara para el sitio una vez, y se prende la luz verde de la cámara.
+- Preguntas abiertas:
+  - Al final de la ESC 1 Martina tapa la cámara con cinta. ¿En la ESC 3 la imagen en vivo tiene que verse tapada, o mostrar el cuarto? Si tiene que mostrar el cuarto, se puede usar un video pregrabado (ya hay un lugar en el menú para cargarlo).
+  - ¿La ventana de la cámara se abre sola con temporizador o con toque invisible del equipo?
+
+## 16. Próximo paso
+
+Elegir la dirección de la ESC 3 y responder lo de la cámara. Probar en el iPhone el teclado simulado y en la MacBook la app de la Mac.

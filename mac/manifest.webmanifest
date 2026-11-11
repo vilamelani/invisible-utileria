@@ -1,0 +1,13 @@
+{
+  "name": "Invisible — Mac",
+  "short_name": "Escritorio",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#DCE4F2",
+  "theme_color": "#DCE4F2",
+  "icons": [
+    { "src": "iconos/icono-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "iconos/icono-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

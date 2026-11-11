@@ -1,6 +1,6 @@
 // Service worker: deja toda la app disponible sin conexión.
 // Subí VERSION cada vez que publiques cambios para que los celulares bajen la versión nueva.
-const VERSION = 'invisible-v6';
+const VERSION = 'invisible-v7';
 const ARCHIVOS = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const ARCHIVOS = [
   './js/icons.js',
   './js/media.js',
   './js/menu.js',
+  './js/teclado.js',
   './contenido/guion.json',
   './iconos/icono-180.png',
   './iconos/icono-192.png',

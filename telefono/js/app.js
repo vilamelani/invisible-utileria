@@ -2,6 +2,7 @@
 import { appIcon, I, tail, waveBars, sized } from './icons.js';
 import { M, cargarMedios, esVideo, guardarMedio, src, srcEsVideo } from './media.js';
 import { initMenu, abrirMenu, refrescarMenu } from './menu.js';
+import { campoFalso, abrirTeclado, cerrarTeclado, resetTeclado, refrescarTeclado, tecladoAbierto } from './teclado.js';
 
 const LS_ESTADO = 'invisible-estado-v1';
 const LS_AJUSTES = 'invisible-ajustes-v1';
@@ -25,6 +26,8 @@ export const A = {
   ecoVelocidad: 5,       // palabras por segundo de Eco
   formato24: true,       // 03:12 (true) o 3:12 (false)
   extraTop: 36,          // px extra bajo la barra translúcida (zona que iOS desenfoca)
+  teclado: 'simulado',   // 'simulado' (dibujado por la app, sin la barra ↑ ↓ ✓ de iOS) | 'sistema'
+  predictivo: true,      // barra de sugerencias del teclado simulado
   horaFija: '',          // 'HH:MM' = hora de ficción que corre desde que se fijó
   horaFijaDesde: 0
 };
@@ -149,6 +152,7 @@ export function go(screen, anim) {
 }
 export function render(anim) {
   if (cleanup) { cleanup(); cleanup = null; }
+  resetTeclado();
   const old = CUR;
   const el = document.createElement('div');
   el.className = 'screen';
@@ -490,6 +494,7 @@ function scrTalkGram(el) {
   el.querySelector('[data-avatar]').onclick = (e) => verFotoPerfil(el, e.currentTarget);
   el.querySelector('[data-who]').onclick = () => hojaContacto(el);
   el.querySelector('[data-list]').addEventListener('click', (e) => {
+    if (tecladoAbierto() && !e.target.closest('button')) cerrarTeclado();
     const p = e.target.closest('[data-play]');
     if (p) return reproducirAudio(+p.dataset.play);
     if (e.target.closest('[data-agregar]')) hojaContacto(el);
@@ -563,9 +568,17 @@ function tgComposer(estado) {
     box.querySelector('[data-sendrec]').onclick = enviarAudio;
     return;
   }
+  const sim = A.teclado === 'simulado';
   box.innerHTML = `<button class="tg-ibtn" aria-label="Adjuntar">${I.plus}</button>
-    <textarea class="tg-field" rows="1" placeholder="Mensaje" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" data-field></textarea>
+    ${sim ? '<span data-slot></span>' : '<textarea class="tg-field" rows="1" placeholder="Mensaje" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" data-field></textarea>'}
     <span data-right style="display:flex"></span>`;
+  if (sim) {
+    const cf = campoFalso('tg-field', 'Mensaje');
+    cf.dataset.field = '';
+    box.querySelector('[data-slot]').replaceWith(cf);
+    cf.addEventListener('pointerup', () => abrirTecladoTG(cf));
+    if (tecladoAbierto()) abrirTecladoTG(cf);
+  }
   const f = box.querySelector('[data-field]');
   const right = box.querySelector('[data-right]');
   const pintarDerecha = () => {
@@ -595,6 +608,59 @@ function tgComposer(estado) {
   ajustarAlto();
 }
 
+// ---------- Teclado simulado en TalkGram ----------
+function abrirTecladoTG(cf) {
+  TR.esperarToque = false;
+  abrirTeclado(CUR, cf, { predictivo: A.predictivo, sugerencias: sugerenciasTG, alSugerir: sugerirTG, alIntro: () => {}, alMover: scrollAbajo });
+}
+// Palabras del texto del guion con su posición final (para avanzar el modo Completar hasta ahí).
+function palabrasDe(texto) {
+  const out = [];
+  const re = /\S+/g;
+  let m;
+  while ((m = re.exec(texto))) out.push({ ini: m.index, fin: m.index + m[0].length, w: m[0] });
+  return out;
+}
+const limpiarPalabra = (w) => w.replace(/^[¿¡"'(]+|[.,;:!?"')…]+$/g, '');
+// [INVENTADO] sugerencias genéricas para el modo libre con el campo vacío.
+const SUG_LIBRE = ['Sí', 'No', 'Jaja'];
+function sugerenciasTG() {
+  const f = $('[data-field]');
+  const v = f ? f.value : '';
+  const exp = esperado();
+  if (A.modo === 'completar' && aceptaTexto(exp)) {
+    const ws = palabrasDe(exp.texto);
+    const n = typedN;
+    const i = ws.findIndex((w) => w.fin > n || (w.fin === n && exp.texto[n] !== ' ' && n < exp.texto.length));
+    if (i < 0) return [];
+    const cur = ws[i];
+    const parcial = n > cur.ini ? exp.texto.slice(cur.ini, n) : '';
+    const item = (w) => (w ? { texto: limpiarPalabra(w.w) || w.w, fin: Math.min(exp.texto.length, w.fin + (exp.texto[w.fin] === ' ' ? 1 : 0)) } : null);
+    if (parcial) return [{ texto: `“${parcial}”`, fin: n }, item(cur), item(ws[i + 1])].filter(Boolean);
+    return [item(cur), item(ws[i + 1]), item(ws[i + 2])].filter(Boolean);
+  }
+  const m = v.match(/(\S+)$/);
+  if (m) return [{ texto: `“${m[1]}”`, libre: m[1] }];
+  return SUG_LIBRE.map((w) => ({ texto: w, libre: w, nueva: true }));
+}
+function sugerirTG(it) {
+  const f = $('[data-field]');
+  if (!f) return;
+  const exp = esperado();
+  if (it.fin !== undefined && A.modo === 'completar' && aceptaTexto(exp)) {
+    typedN = it.fin;
+    f.value = exp.texto.slice(0, typedN);
+  } else if (it.libre) {
+    const base = it.nueva ? f.value : f.value.replace(/\S+$/, '');
+    f.value = base + it.libre + ' ';
+  }
+  // Repinta el botón de enviar y el alto sin pasar por la lógica de "letras por tecla".
+  const guardado = A.modo;
+  A.modo = 'libre';
+  f.dispatchEvent(new Event('input'));
+  A.modo = guardado;
+}
+
 function enviarTexto() {
   const f = $('[data-field]');
   const v = f.value.trim();
@@ -617,6 +683,7 @@ function enviarTexto() {
 
 function grabarAudio() {
   TR.esperarToque = false;
+  cerrarTeclado();
   const t0 = Date.now();
   tgComposer('rec');
   const wave = $('[data-recwave]');
@@ -701,7 +768,21 @@ function hojaContacto(el) {
       <div class="sheet-group"><div class="sheet-row"><span class="k">celular</span><span class="v">${esc(G.contacto.numero)}</span></div></div>
     </div>`;
   el.appendChild(back);
-  const inp = back.querySelector('[data-nombre]');
+  let inp = back.querySelector('[data-nombre]');
+  const sim = A.teclado === 'simulado';
+  if (sim) {
+    const cf = campoFalso('', 'Nombre');
+    inp.replaceWith(cf);
+    inp = cf;
+    const abrir = () => abrirTeclado(el, cf, {
+      predictivo: A.predictivo,
+      sugerencias: () => (A.modo === 'completar' ? [G.contacto.nombreAgendado] : []),
+      alSugerir: () => { n = G.contacto.nombreAgendado.length; cf.value = G.contacto.nombreAgendado; },
+      alIntro: () => {}
+    });
+    cf.addEventListener('pointerup', abrir);
+    back._abrir = abrir;
+  }
   let n = 0;
   inp.addEventListener('input', (e) => {
     if (A.modo !== 'completar') return;
@@ -709,7 +790,7 @@ function hojaContacto(el) {
     n = (e.inputType || '').startsWith('delete') ? Math.max(0, n - 1) : Math.min(objetivo.length, n + 1);
     inp.value = objetivo.slice(0, n);
   });
-  const cerrar = () => { back.classList.add('out'); setTimeout(() => back.remove(), 260); };
+  const cerrar = () => { if (sim) cerrarTeclado(); back.classList.add('out'); setTimeout(() => back.remove(), 260); };
   back.querySelector('[data-cancel]').onclick = cerrar;
   back.querySelector('[data-ok]').onclick = () => {
     S.tg.agendado = true;
@@ -719,7 +800,7 @@ function hojaContacto(el) {
     tgHeader();
     tgLista();
   };
-  setTimeout(() => inp.focus(), 300);
+  setTimeout(() => (sim ? back._abrir() : inp.focus()), 300);
 }
 
 // ---------- Motor del guion de TalkGram ----------
@@ -1044,7 +1125,7 @@ function initToques() {
       const t = Date.now();
       if (t - ultimoToque < 400) { ultimoToque = 0; siguiente(); } else ultimoToque = t;
     }
-    yBottom = e.clientY > window.innerHeight - 40 ? e.clientY : null;
+    yBottom = e.clientY > window.innerHeight - 40 && !e.target.closest('.kbs') ? e.clientY : null;
   }, true);
   const fin = (e) => {
     clearTimeout(lp);
@@ -1059,6 +1140,7 @@ function initToques() {
 }
 
 // ---------- Teclado (iOS) ----------
+const altoMax = { o: '', v: 0 };
 function initViewport() {
   const vv = window.visualViewport;
   const ajustar = () => {
@@ -1066,9 +1148,16 @@ function initViewport() {
     // Con la barra translúcida, iOS informa una altura más corta (le resta la barra de arriba):
     // la altura real de la app es la de la pantalla.
     const translucida = document.body.classList.contains('barra-translucida') && esApp();
-    const completa = translucida ? Math.max(window.innerHeight, screen.height) : window.innerHeight;
+    // En iOS 26 la altura de la ventana también se achica con el teclado del sistema: se usa la mayor
+    // vista en esta orientación. Si no, el teclado no se detecta y queda un hueco abajo de la barra de escribir.
+    const orient = window.innerWidth > window.innerHeight ? 'h' : 'v';
+    if (altoMax.o !== orient) { altoMax.o = orient; altoMax.v = 0; }
+    altoMax.v = Math.max(altoMax.v, window.innerHeight);
+    const completa = translucida ? Math.max(altoMax.v, screen.height) : altoMax.v;
     const visible = vv ? vv.height : window.innerHeight;
-    const teclado = completa - visible > 150;
+    const ae = document.activeElement;
+    const enCampo = ae && (ae.tagName === 'TEXTAREA' || ae.tagName === 'INPUT') && !ae.readOnly && ae.type !== 'file';
+    const teclado = completa - visible > 150 || (enCampo && completa - visible > 60);
     document.documentElement.style.setProperty('--app-h', (teclado ? visible : completa) + 'px');
     document.body.classList.toggle('kb', !!teclado);
     const b = $('[data-bottom]');
@@ -1078,6 +1167,8 @@ function initViewport() {
   };
   if (vv) { vv.addEventListener('resize', ajustar); vv.addEventListener('scroll', () => window.scrollTo(0, 0)); }
   window.addEventListener('resize', ajustar);
+  document.addEventListener('focusin', () => setTimeout(ajustar, 60));
+  document.addEventListener('focusout', () => setTimeout(ajustar, 60));
   ajustar();
 }
 
