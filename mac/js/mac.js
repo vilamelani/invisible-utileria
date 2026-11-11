@@ -19,7 +19,7 @@ export const A = {
   cargaVideo: 8,       // seg. que tarda en cargar el video
   videoLoop: false,
   esc3Auto: true,      // ESC 3: los pasos avanzan solos
-  esc3Paso: 5,         // seg. entre línea y línea
+  esc3Paso: 2,         // seg. de pausa entre un paso y el siguiente (cuando terminó de escribir la terminal)
   esc3Arranque: 0,     // seg. para que arranque sola al cargar el plano (0 = con el toque)
   camFuente: 'webcam', // 'webcam' (la cámara real de la Mac) | 'video' (video de respaldo cargado en el menú)
   cursorFalso: true    // cursor que se mueve solo (y se oculta el real)
@@ -100,6 +100,7 @@ const APPS = {
   musica: { n: 'Música', bg: 'linear-gradient(180deg,#FF7590 0%,#EE2A50 100%)', svg: '<path d="M25 41V20l19-4.5v21" stroke="#FFFFFF" stroke-width="3.6" fill="none" stroke-linejoin="round"/><circle cx="20" cy="41" r="5.5" fill="#FFFFFF"/><circle cx="39" cy="36.5" r="5.5" fill="#FFFFFF"/>' },
   fotos: { n: 'Fotos', bg: 'linear-gradient(180deg,#FFB35C 0%,#F07A2A 100%)', svg: '<circle cx="38" cy="22" r="5" fill="#FFFFFF"/><path d="M12 44l12-15 8 9 5-5 11 11z" fill="#FFFFFF"/>' },
   notas: { n: 'Notas', bg: 'linear-gradient(180deg,#FFE88E 0%,#FFC93C 100%)', svg: '<rect x="14" y="13" width="32" height="34" rx="4" fill="#FFFFFF"/><path d="M20 24h20M20 31h20M20 38h12" stroke="#E0B12A" stroke-width="2.6" stroke-linecap="round"/>' },
+  terminal: { n: 'Terminal', bg: 'linear-gradient(180deg,#45454D 0%,#1C1C21 100%)', svg: '<rect x="9.5" y="12.5" width="41" height="35" rx="5" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1"/><path d="M18 24l7 6-7 6" stroke="#FFFFFF" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M29 37h12" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round"/>' },
   ajustes: { n: 'Ajustes', bg: 'linear-gradient(180deg,#B9BCC4 0%,#7E828C 100%)', svg: '<circle cx="30" cy="30" r="9" fill="none" stroke="#FFFFFF" stroke-width="4"/><path d="M30 12v6M30 42v6M12 30h6M42 30h6M17.3 17.3l4.2 4.2M38.5 38.5l4.2 4.2M17.3 42.7l4.2-4.2M38.5 21.5l4.2-4.2" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>' }
 };
 const appIcon = (k, size = 52) => `<span class="ic" style="width:${size}px;height:${size}px;border-radius:${Math.round(size * 0.23)}px;background:${APPS[k].bg}"><svg viewBox="0 0 60 60" width="${size}" height="${size}" aria-hidden="true">${APPS[k].svg}</svg></span>`;
@@ -241,7 +242,7 @@ function pintarMenuBar() {
 function pintarDock() {
   const abiertas = { musica: S.win.musica.open, correo: S.win.correo.open, archivos: true };
   const badge = S.mail.llego && !S.mail.leido;
-  const ks = ['archivos', 'navegador', 'correo', 'musica', 'fotos', 'notas', 'ajustes'];
+  const ks = ['archivos', 'navegador', 'correo', 'musica', 'fotos', 'notas', 'terminal', 'ajustes'];
   $('[data-dock]').innerHTML = ks.map((k) => `<button class="dk" data-dk="${k}" aria-label="${APPS[k].n}">${appIcon(k)}${k === 'correo' && badge ? '<span class="badge">1</span>' : ''}<i class="${abiertas[k] ? 'on' : ''}"></i></button>`).join('') +
     `<span class="dk-sep"></span><button class="dk" aria-label="Papelera"><span class="ic papel"><svg viewBox="0 0 60 60" width="52" height="52" aria-hidden="true"><path d="M17 19h26M24 19v-3h12v3M19.5 19l2 26h17l2-26" fill="none" stroke="#6E6E73" stroke-width="2.6" stroke-linejoin="round"/><path d="M26 25v14M30 25v14M34 25v14" stroke="#6E6E73" stroke-width="1.8" stroke-linecap="round"/></svg></span><i></i></button>`;
 }
@@ -532,7 +533,9 @@ async function boot() {
   if (editado) { try { C = JSON.parse(editado); } catch (e) { C = null; } }
   const original = await (await fetch('contenido/mac.json')).json();
   if (!C) C = original;
-  Object.keys(original).forEach((k) => { if (C[k] === undefined) C[k] = original[k]; }); // textos nuevos que no estaban en una versión editada
+  // Textos nuevos que no estaban en una versión editada desde el menú
+  Object.keys(original).forEach((k) => { if (C[k] === undefined) C[k] = original[k]; });
+  if (C.esc3 && original.esc3) Object.keys(original.esc3).forEach((k) => { if (C.esc3[k] === undefined) C.esc3[k] = original.esc3[k]; });
   try { const s = JSON.parse(localStorage.getItem(LS_ESTADO) || 'null'); if (s && s.win) S = s; } catch (e) { /* */ }
   if (!S) S = estadoBase();
   await cargarMedios();

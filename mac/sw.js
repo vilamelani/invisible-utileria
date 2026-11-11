@@ -1,6 +1,6 @@
 // Service worker: deja la app de la Mac disponible sin conexión.
 // Subí VERSION cada vez que publiques cambios.
-const VERSION = 'invisible-mac-v2';
+const VERSION = 'invisible-mac-v3';
 const ARCHIVOS = [
   './', './index.html', './manifest.webmanifest', './css/mac.css',
   './js/mac.js', './js/menu.js', './js/media.js', './js/esc3.js', './contenido/mac.json',

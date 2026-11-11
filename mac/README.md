@@ -68,11 +68,15 @@ En la ESC 3, "Siguiente evento" hace aparecer la próxima línea de Eco.
 
 ### ESC 3
 
-1. En el menú: **Cargar ESC 3**. Queda Eco cargando, sin líneas.
-2. La primera línea aparece con el toque invisible (doble clic sobre la hora o Ctrl+Opción+→). También puede arrancar sola a los X segundos.
-3. Las demás líneas aparecen solas cada 5 s (configurable), o una por toque si se apaga el temporizador.
-4. Cada línea abre su terminal y la última abre la ventana **cam0 — en vivo**.
-5. Un cursor falso se mueve solo hacia cada ventana nueva y el cursor real se oculta. Se puede apagar.
+1. En el menú: **Cargar ESC 3**. Queda el escritorio vacío.
+2. Arranca con el toque invisible (doble clic sobre la hora o Ctrl+Opción+→), o sola a los X segundos.
+3. **Paso 1:** un cursor que se mueve solo va al Dock y abre el Navegador en ventana privada. Hace clic en la barra de direcciones y escribe "eco.chat" letra por letra. La página carga y aparece "Enviando a Martina". Después el cursor hace clic en Terminal (Dock) y se abre la primera terminal, que escribe comandos.
+4. **Pasos 2 y 3:** aparece la línea siguiente en Eco y el cursor abre otra terminal desde el Dock.
+5. **Paso 4:** el cursor hace clic en la última terminal, que escribe `camara --abrir --en-vivo`. Se abre la ventana **cam0 — en vivo** y aparece "No sos invisible."
+
+Cada paso sigue solo 2 s después de que la terminal terminó de escribir (configurable). También se puede apagar el avance solo y pasar paso por paso con el toque. Si se toca antes de que termine un paso, el siguiente espera a que termine.
+
+Las ventanas salen del ícono del Dock y el ícono rebota, como en macOS. El cursor real queda oculto mientras tanto.
 
 **Cámara:** por defecto usa la **webcam real** de la Mac. La primera vez Safari pide permiso:
 - Usá **Pedir permiso de cámara ahora** del menú antes de la toma, así el cartel no aparece en cámara.

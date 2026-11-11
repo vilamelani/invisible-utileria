@@ -79,11 +79,11 @@ function html() {
     </section>
     <section>
       <h3>ESC 3 · Eco toma la Mac</h3>
-      <div class="row">${b('esc3-cargar', 'Cargar ESC 3 (Eco cargando)', 'go')}${b('siguiente', 'Siguiente línea')}</div>
-      <div class="row"><label><input type="checkbox" data-chk="esc3Auto" ${A.esc3Auto ? 'checked' : ''}> Después de la primera línea, las demás aparecen solas</label>
-        <label>cada (s) <input type="number" min="1" step="0.5" data-num="esc3Paso" value="${A.esc3Paso}"></label></div>
+      <div class="row">${b('esc3-cargar', 'Cargar ESC 3 (escritorio vacío)', 'go')}${b('siguiente', 'Siguiente línea')}</div>
+      <div class="row"><label><input type="checkbox" data-chk="esc3Auto" ${A.esc3Auto ? 'checked' : ''}> Después del primer paso, los demás siguen solos</label>
+        <label>pausa entre pasos (s) <input type="number" min="0" step="0.5" data-num="esc3Paso" value="${A.esc3Paso}"></label></div>
       <div class="row"><label>Arranca sola a los (s) de cargar la ESC 3 <input type="number" min="0" step="0.5" data-num="esc3Arranque" value="${A.esc3Arranque}"></label></div>
-      <p class="note">0 = la primera línea aparece con el toque invisible (doble clic sobre la hora o Ctrl+Opción+→). Con cada línea se abre una terminal; con la última, la cámara en vivo.</p>
+      <p class="note">0 = arranca con el toque invisible (doble clic sobre la hora o Ctrl+Opción+→). Paso 1: el cursor abre el navegador privado desde el Dock, escribe la dirección de Eco y abre la primera terminal. Pasos 2 y 3: nueva línea en Eco y otra terminal desde el Dock. Paso 4: un comando abre la cámara en vivo y aparece la última línea.</p>
       <div class="row">
         <button class="btn ${A.camFuente !== 'video' ? 'on' : ''}" data-cam="webcam">Cámara: webcam real</button>
         <button class="btn ${A.camFuente === 'video' ? 'on' : ''}" data-cam="video">Cámara: video de respaldo</button>

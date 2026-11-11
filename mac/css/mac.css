@@ -178,12 +178,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 /* ---------- ESC 3 · Eco toma la Mac ---------- */
 body.sin-cursor, body.sin-cursor * { cursor: none !important; }
 body.sin-cursor #menu-layer.open, body.sin-cursor #menu-layer.open * { cursor: default !important; }
-.esc3 { position: absolute; inset: 0; z-index: 500; }
+.esc3 { position: absolute; inset: 0; pointer-events: none; } /* sin z-index: así el cursor queda por encima del Dock */
 .e3-nav { position: absolute; border-radius: 14px; overflow: hidden; background: #FFFFFF; box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.14), 0 24px 70px rgba(30, 30, 60, 0.3); display: flex; flex-direction: column; z-index: 5; }
 .e3-chrome { height: 50px; flex-shrink: 0; background: #26262B; display: flex; align-items: center; gap: 16px; padding: 0 16px; }
 .e3-url { flex-grow: 1; margin: 0 80px 0 40px; height: 30px; border-radius: 8px; background: #3A3A40; display: flex; align-items: center; gap: 10px; padding: 0 10px; font-size: 13px; color: #F5F5F7; }
 .e3-priv { padding: 2px 8px; border-radius: 6px; background: #4A4A52; font-weight: 500; }
-.e3-dom { flex-grow: 1; text-align: center; margin-right: 60px; }
+.e3-dom { flex-grow: 1; text-align: center; margin-right: 60px; white-space: nowrap; }
 .e3-prog { height: 3px; background: #EDEAFE; flex-shrink: 0; }
 .e3-prog div { height: 3px; width: 0; background: #6D4AFF; transition: width 0.9s cubic-bezier(0.3, 0.8, 0.3, 1); }
 .e3-page { flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-start; padding: 120px 90px 0; gap: 6px; position: relative; }
@@ -200,8 +200,16 @@ body.sin-cursor #menu-layer.open, body.sin-cursor #menu-layer.open * { cursor: d
 .e3-ln.on { opacity: 1; transform: none; }
 .e3-ln.actual { color: #141317; font-weight: 600; }
 .e3-term { position: absolute; border-radius: 12px; overflow: hidden; background: rgba(24, 22, 32, 0.96); box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.15), 0 20px 50px rgba(0, 0, 0, 0.45); display: none; }
-.e3-term.abierta { display: block; animation: e3Abre 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.1); }
-@keyframes e3Abre { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: none; } }
+.e3-term.abierta { display: block; }
+.e3-win { will-change: transform, opacity; transform-origin: 50% 50%; }
+.e3-nav { display: none; }
+.e3-nav.abierta { display: flex; }
+.e3-url.foco { box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.55); background: #2E2E34; }
+.e3-ph { color: #8E8E93; }
+.e3-ucar { display: inline-block; width: 2px; height: 16px; background: #0A84FF; vertical-align: -3px; margin-left: 1px; animation: caret 1s steps(1) infinite; }
+.e3-prog { transition: opacity 0.4s; }
+.e3-nueva { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: #F2F2F4; color: #6E6E73; font-size: 13px; padding-bottom: 60px; }
+.e3-nueva b { font-size: 17px; color: #3A3A3C; font-weight: 600; margin-top: 8px; }
 .e3-tbar { height: 28px; display: flex; align-items: center; padding: 0 12px; background: #2C2A36; position: relative; }
 .e3-tbar span { position: absolute; left: 0; right: 0; text-align: center; font-size: 12px; color: #B6B2C4; pointer-events: none; }
 .e3-tbody { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 12.5px; line-height: 19px; color: #D8D4E4; padding: 10px 14px 12px; height: 150px; overflow: hidden; }
@@ -216,4 +224,4 @@ body.sin-cursor #menu-layer.open, body.sin-cursor #menu-layer.open * { cursor: d
 .e3-csin { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; color: rgba(255, 255, 255, 0.55); font-size: 12.5px; }
 .e3-rec { position: absolute; left: 12px; top: 10px; display: flex; align-items: center; gap: 6px; font-family: "SF Mono", ui-monospace, Menlo, monospace; color: #FFFFFF; font-size: 12px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
 .e3-rec i { width: 8px; height: 8px; border-radius: 4px; background: #FF453A; animation: caret 1.4s steps(1) infinite; }
-.e3-cursor { position: absolute; left: 0; top: 0; z-index: 100; pointer-events: none; will-change: transform; }
+.e3-cursor { position: absolute; left: 0; top: 0; z-index: 2000; pointer-events: none; will-change: transform; }

@@ -327,7 +327,19 @@ Código en `invisible-utileria/telefono/` (ver su README). Web app estática, of
 
 - `[DECIDIDO]` La página de Eco tiene que referenciar algo "hacker": comandos de terminal que corren e interactúan solos. Además, se abre una miniatura de la webcam grabando en vivo.
 - `[DECIDIDO]` **Dirección 2 · Terminales que se abren solas.** La página de Eco, en una ventana privada del navegador, va mostrando las 4 líneas literales del guion. Con cada línea se abre sola una terminal que tipea comandos.
-- Construido (v1):
+- `[DECIDIDO]` (feedback de Dirección) Las transiciones tienen que verse claras y realistas:
+  - Se tiene que ver que se abre el navegador en modo incógnito y que la URL de Eco se escribe sola.
+  - Las terminales se abren desde un ícono, y se tiene que notar que se abren solas.
+  - El cursor tiene que moverse rápido y de forma creíble.
+- Construido (v2), reemplaza la secuencia de la v1:
+  - Paso 1: el cursor va al Dock y abre el Navegador en ventana privada → clic en la barra de direcciones → escribe "eco.chat" con ritmo irregular → Enter → la página carga y aparece "Enviando a Martina" → clic en Terminal (Dock) → se abre la terminal "conectar".
+  - Pasos 2 y 3: aparece la línea siguiente en Eco → clic en Terminal (Dock) → se abre la terminal siguiente.
+  - Paso 4: clic en la terminal "perfil" → escribe `camara --abrir --en-vivo` → se abre la cámara → aparece "No sos invisible."
+  - Cursor con movimiento de mouse real: rápido, con aceleración y frenado y una trayectoria apenas curva. Se achica un instante en cada clic.
+  - Las ventanas salen del ícono del Dock (o de la terminal, en el caso de la cámara) y el ícono rebota.
+  - Cada paso sigue solo 2 s después de que la terminal termina de escribir.
+  - `[INVENTADO]` Se agregó el ícono de Terminal al Dock y la página de inicio de la navegación privada ("Navegación privada activada").
+- Construido (v1, reemplazado):
   - Secuencia:
     - "Enviando a Martina": abre la terminal "conectar".
     - "Cruzando historial de ubicación…": abre la terminal "ubicacion".
@@ -345,7 +357,6 @@ Código en `invisible-utileria/telefono/` (ver su README). Web app estática, of
 - Técnica: la webcam en vivo funciona en Safari de la Mac (https). Hay que dar permiso a la cámara para el sitio. El menú tiene un botón para pedirlo antes de la toma. Se prende la luz verde de la cámara.
 - Preguntas abiertas:
   - Al final de la ESC 1 Martina tapa la cámara con cinta. ¿En la ESC 3 la imagen tiene que verse tapada, o mostrar el cuarto? Si tiene que mostrar el cuarto, se usa el video de respaldo.
-  - ¿Te sirve que la ventana de la cámara se abra con la última línea, o la querés en otro momento?
 
 ## 16. Próximo paso
 
