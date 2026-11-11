@@ -82,6 +82,8 @@ function pintar() {
         <button class="btn ${barra() === 'black-translucent' ? 'on' : ''}" data-barra="black-translucent">Texto blanco</button>
         <button class="btn ${barra() === 'auto' ? 'on' : ''}" data-barra="auto">Automático (prueba)</button>
       </div>
+      <div class="row"><label>Espacio extra bajo la barra (px) <input type="number" step="2" min="0" data-num="extraTop" value="${A.extraTop}"></label></div>
+      <p class="note">Solo con "Texto blanco": iOS desenfoca lo que queda debajo de la barra y un poco más abajo. Este espacio baja el contenido para que ningún texto quede desenfocado. 0 = pegado a la barra.</p>
       <p class="note">Texto oscuro: la barra toma el color de cada pantalla (bien para TalkGram y Eco). Texto blanco: la app pasa por debajo de la barra (bien para bloqueo, Inicio, historias y llamada). Automático: intenta cambiar según la pantalla; puede no funcionar en todos los iOS. Después de cambiarlo, cerrá la app desde el selector de apps y volvé a abrirla.</p>
     </section>
 
@@ -186,5 +188,9 @@ async function onChange(ev) {
     return;
   }
   if (t.dataset.chk) { A[t.dataset.chk] = t.checked; saveAjustes(); return; }
-  if (t.dataset.num) { const v = parseFloat(t.value); if (!Number.isNaN(v)) { A[t.dataset.num] = v; saveAjustes(); } }
+  if (t.dataset.num) {
+    const v = parseFloat(t.value);
+    if (!Number.isNaN(v)) { A[t.dataset.num] = v; saveAjustes(); }
+    if (t.dataset.num === 'extraTop') document.documentElement.style.setProperty('--extra-top', (A.extraTop || 0) + 'px');
+  }
 }

@@ -24,6 +24,7 @@ export const A = {
   reSonarVeces: 1,
   ecoVelocidad: 5,       // palabras por segundo de Eco
   formato24: true,       // 03:12 (true) o 3:12 (false)
+  extraTop: 36,          // px extra bajo la barra translúcida (zona que iOS desenfoca)
   horaFija: '',          // 'HH:MM' = hora de ficción que corre desde que se fijó
   horaFijaDesde: 0
 };
@@ -1029,9 +1030,14 @@ function initToques() {
 function initViewport() {
   const vv = window.visualViewport;
   const ajustar = () => {
-    const h = vv ? vv.height : window.innerHeight;
-    document.documentElement.style.setProperty('--app-h', h + 'px');
-    const teclado = vv && window.innerHeight - vv.height > 120;
+    detectarBarra();
+    // Con la barra translúcida, iOS informa una altura más corta (le resta la barra de arriba):
+    // la altura real de la app es la de la pantalla.
+    const translucida = document.body.classList.contains('barra-translucida') && navigator.standalone;
+    const completa = translucida ? Math.max(window.innerHeight, screen.height) : window.innerHeight;
+    const visible = vv ? vv.height : window.innerHeight;
+    const teclado = completa - visible > 150;
+    document.documentElement.style.setProperty('--app-h', (teclado ? visible : completa) + 'px');
     document.body.classList.toggle('kb', !!teclado);
     const b = $('[data-bottom]');
     if (b) b.classList.toggle('kb-closed', !teclado);
@@ -1053,7 +1059,7 @@ function detectarBarra() {
 }
 async function boot() {
   load();
-  detectarBarra();
+  document.documentElement.style.setProperty('--extra-top', (A.extraTop || 0) + 'px');
   const editado = localStorage.getItem(LS_GUION);
   if (editado) {
     try { G = JSON.parse(editado); } catch (e) { G = null; }

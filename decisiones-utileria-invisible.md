@@ -273,7 +273,9 @@ Código en `invisible-utileria/telefono/` (ver su README). Web app estática, of
 - **Barra de estado negra**: era el fondo negro de la página, que iOS usa para pintar la barra. Ahora la página toma el color de cada pantalla.
   - Prueba en el 15 Pro: en modo oscuro, iOS pinta la barra con su propio gris (`#1C1C1E`) e ignora el color de la app. Por eso el bloqueo, el Inicio y la llamada se veían con una franja gris.
   - `[PROPUESTA]` Modo **texto oscuro** como base, con un degradé que funde el borde superior de las pantallas oscuras en ese gris.
-  - Pendiente: probar "texto blanco" (la app pasa por debajo de la barra), que puede ser más realista en las pantallas con foto. **Para que se aplique hay que borrar el ícono y volver a agregarlo**, porque iOS guarda el ajuste al instalar. Hay que revisar cómo quedan TalkGram y Eco con texto blanco.
+  - Segunda prueba, con "texto blanco" activo (después de volver a agregar el ícono): la app pasa por debajo de la barra y **el texto de la barra se adapta solo** (negro en pantallas claras, blanco en oscuras). `[PROPUESTA]` Queda como modo recomendado.
+    - iOS desenfoca la zona bajo la barra y no se puede apagar. `[PROPUESTA]` Se agrega un espacio de 36 px (ajustable en el menú) para que ningún texto quede en esa zona.
+    - Arreglado: la franja de abajo, que aparecía porque iOS informa una altura más corta en ese modo, y el degradé oscuro, que ahora solo aparece en modo "texto oscuro".
 - `[PROPUESTA]` Con conexión, la app siempre baja la última versión. Sin conexión (modo avión) usa la guardada.
 
 ## 12. Próximo paso
